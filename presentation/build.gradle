@@ -19,6 +19,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'realm-android' // Realm needs to be before Kotlin or the build will fail
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
 android {
@@ -30,8 +31,8 @@ android {
         applicationId "com.moez.QKSMS"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 2215
-        versionName "3.9.1"
+        versionCode 2218
+        versionName "3.9.4"
         setProperty("archivesBaseName", "QKSMS-v${versionName}")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -75,16 +76,16 @@ android {
         noAnalytics { dimension "analytics" }
     }
 
-    viewBinding {
-        enabled = true
-    }
-
     if (System.getenv("CI") == "true") {
         signingConfigs.release.storeFile = file("../keystore")
         signingConfigs.release.storePassword = System.getenv("keystore_password")
         signingConfigs.release.keyAlias = System.getenv("key_alias")
         signingConfigs.release.keyPassword = System.getenv("key_password")
     }
+}
+
+androidExtensions {
+    experimental = true
 }
 
 configurations {
@@ -192,8 +193,8 @@ dependencies {
     implementation project(':domain')
 
     withAnalyticsImplementation 'com.google.firebase:firebase-crashlytics:17.3.0'
-    withAnalyticsImplementation "com.android.billingclient:billing:1.0"
-
+    withAnalyticsImplementation "com.android.billingclient:billing:$billing_version"
+    withAnalyticsImplementation "com.android.billingclient:billing-ktx:$billing_version"
     noAnalyticsDebug project(path: ':data', configuration: 'noAnalyticsDebug')
     noAnalyticsRelease project(path: ':data', configuration: 'noAnalyticsRelease')
     withAnalyticsDebug project(path: ':data', configuration: 'withAnalyticsDebug')

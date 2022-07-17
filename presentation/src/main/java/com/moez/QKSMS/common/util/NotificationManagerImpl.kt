@@ -31,11 +31,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
 import android.provider.ContactsContract
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import androidx.core.app.Person
-import androidx.core.app.RemoteInput
-import androidx.core.app.TaskStackBuilder
+import androidx.core.app.*
 import androidx.core.content.getSystemService
 import androidx.core.graphics.drawable.IconCompat
 import com.moez.QKSMS.R
@@ -45,12 +41,7 @@ import com.moez.QKSMS.feature.compose.ComposeActivity
 import com.moez.QKSMS.feature.qkreply.QkReplyActivity
 import com.moez.QKSMS.manager.PermissionManager
 import com.moez.QKSMS.mapper.CursorToPartImpl
-import com.moez.QKSMS.receiver.BlockThreadReceiver
-import com.moez.QKSMS.receiver.DeleteMessagesReceiver
-import com.moez.QKSMS.receiver.MarkArchivedReceiver
-import com.moez.QKSMS.receiver.MarkReadReceiver
-import com.moez.QKSMS.receiver.MarkSeenReceiver
-import com.moez.QKSMS.receiver.RemoteMessagingReceiver
+import com.moez.QKSMS.receiver.*
 import com.moez.QKSMS.repository.ConversationRepository
 import com.moez.QKSMS.repository.MessageRepository
 import com.moez.QKSMS.util.GlideApp
@@ -221,6 +212,21 @@ class NotificationManagerImpl @Inject constructor(
         // appropriately bypass DND mode
         conversation.recipients.forEach { recipient ->
             notification.addPerson("tel:${recipient.address}")
+        }
+
+        // 显示复制验证码
+        conversation.lastMessage?.body?.let { it ->
+            val regex = "[0-9]{4,200}".toRegex()
+            val all = regex.findAll(it).filterIndexed { index, _ ->  index < 3}
+            all.forEach {
+                val intent = Intent(context, MessageCodeCopyReceiver::class.java)
+                intent.action = ACTION_COPY_VERIFY_CODE + it.value
+                intent.putExtra(INTENT_VERIFY_CODE, it.value)
+                val pendingIntent =
+                    PendingIntent.getBroadcast(context, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+                val action = NotificationCompat.Action.Builder(0, "复制:${it.value}", pendingIntent).build()
+                notification.addAction(action)
+            }
         }
 
         // Add the action buttons

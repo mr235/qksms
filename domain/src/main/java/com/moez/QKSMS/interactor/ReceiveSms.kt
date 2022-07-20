@@ -82,7 +82,9 @@ class ReceiveSms @Inject constructor(
                 }
                 .filter {
                     message ->
-                    !("10010".equals(message.address) || "10001".equals(message.address) || "10086".equals(message.address)) // 过滤联通，电信，移动宣传短信，不弹通知栏提醒
+                    // 过滤联通，电信，移动宣传短信，不弹通知栏提醒
+                    val verifyMessage = message.body.contains("验证")
+                    !(!verifyMessage && ("10010" == message.address || "10001" == message.address || "10086" == message.address))
                 }
                 .mapNotNull { message ->
                     conversationRepo.getOrCreateConversation(message.threadId) // Map message to conversation

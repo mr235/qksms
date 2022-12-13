@@ -36,6 +36,4 @@ interface PermissionManager {
 
     fun hasStorage(): Boolean
 
-    fun hasExactAlarms(): Boolean
-
 }

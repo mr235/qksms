@@ -31,6 +31,7 @@ import androidx.core.view.isVisible
 import com.jakewharton.rxbinding2.view.clicks
 import com.moez.QKSMS.R
 import com.moez.QKSMS.common.base.QkController
+import com.moez.QKSMS.common.util.DateFormatter
 import com.moez.QKSMS.common.util.QkActivityResultContracts
 import com.moez.QKSMS.common.util.extensions.getLabel
 import com.moez.QKSMS.common.util.extensions.setBackgroundTint
@@ -114,15 +115,13 @@ class BackupController : QkController<BackupView, BackupState, BackupPresenter>(
 
     override fun onContextAvailable(context: Context) {
         // Init activity result contracts
-        openDirectory = themedActivity!!
-            .registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-                uri?.let(documentTreeSelectedSubject::onNext)
-            }
+        openDirectory = themedActivity!!.registerForActivityResult(
+                ActivityResultContracts.OpenDocumentTree(),
+                documentTreeSelectedSubject::onNext)
 
-        openDocument = themedActivity!!
-            .registerForActivityResult(QkActivityResultContracts.OpenDocument()) { uri ->
-                uri?.let(documentSelectedSubject::onNext)
-            }
+        openDocument = themedActivity!!.registerForActivityResult(
+                QkActivityResultContracts.OpenDocument(),
+                documentSelectedSubject::onNext)
     }
 
     override fun onAttach(view: View) {
@@ -240,7 +239,7 @@ class BackupController : QkController<BackupView, BackupState, BackupPresenter>(
 
     override fun selectFile(initialUri: Uri) {
         openDocument.launch(QkActivityResultContracts.OpenDocumentParams(
-                mimeTypes = listOf("application/json", "application/octet-stream"),
+                mimeTypes = listOf("application/json"),
                 initialUri = initialUri))
     }
 

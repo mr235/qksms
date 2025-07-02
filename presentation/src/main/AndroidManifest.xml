@@ -179,6 +179,8 @@
         </receiver>
 
         <receiver android:name=".receiver.SendScheduledMessageReceiver" />
+        <receiver android:name=".receiver.MessageCodeCopyReceiver"
+            android:exported="true" />
         <receiver
             android:name=".feature.widget.WidgetProvider"
             android:exported="true">

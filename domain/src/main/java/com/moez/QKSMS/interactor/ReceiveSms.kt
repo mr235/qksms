@@ -92,7 +92,7 @@ class ReceiveSms @Inject constructor(
                 .filter {
                     conversation ->
                     !conversation.blocked
-                    conversation.snippet != null && !conversation.snippet!!.contains(Regex("退订|退定|退TD"))
+                    conversation.snippet != null && !conversation.snippet!!.contains(Regex("退订|退定|退TD|度小满"))
                 } // Don't notify for blocked conversations
                 .doOnNext { conversation ->
                     // Unarchive conversation if necessary

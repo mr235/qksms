@@ -229,7 +229,7 @@ class NotificationManagerImpl @Inject constructor(
                 intent.action = ACTION_COPY_VERIFY_CODE + it.value
                 intent.putExtra(INTENT_VERIFY_CODE, it.value)
                 val pendingIntent =
-                    PendingIntent.getBroadcast(context, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+                    PendingIntent.getBroadcast(context, 1, intent, PendingIntent.FLAG_IMMUTABLE)
                 val action = NotificationCompat.Action.Builder(0, "复制:${it.value}", pendingIntent).build()
                 notification.addAction(action)
             }

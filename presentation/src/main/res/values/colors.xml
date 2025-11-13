@@ -37,11 +37,12 @@
     <color name="textSecondaryDisabled">#4C70808D</color>
     <color name="textTertiary">#B7B9C0</color>
 
-    <color name="textPrimaryDark">#FFFFFFFF</color>
-    <color name="textPrimaryDisabledDark">#7FFFFFFF</color>
-    <color name="textSecondaryDark">#ccffffff</color>
-    <color name="textSecondaryDisabledDark">#67ffffff</color>
-    <color name="textTertiaryDark">#80ffffff</color>
+    <color name="textPrimaryDark">#DCDCD7</color>
+<!--    <color name="textPrimaryDark">#9FADC5</color>-->
+    <color name="textPrimaryDisabledDark">#7FDCDCD7</color>
+    <color name="textSecondaryDark">#ccB4B4AF</color>
+    <color name="textSecondaryDisabledDark">#67B4B4AF</color>
+    <color name="textTertiaryDark">#80B4B4AF</color>
 
     <color name="bubbleLight">#ECEFF1</color>
     <color name="bubbleDark">#11171B</color>

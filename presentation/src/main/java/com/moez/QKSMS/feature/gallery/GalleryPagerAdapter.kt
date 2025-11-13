@@ -22,6 +22,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.viewbinding.ViewBinding
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
@@ -30,22 +31,21 @@ import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.google.android.mms.ContentType
-import com.moez.QKSMS.R
 import com.moez.QKSMS.common.base.QkRealmAdapter
 import com.moez.QKSMS.common.base.QkViewHolder
+import com.moez.QKSMS.databinding.GalleryImagePageBinding
+import com.moez.QKSMS.databinding.GalleryInvalidPageBinding
+import com.moez.QKSMS.databinding.GalleryVideoPageBinding
 import com.moez.QKSMS.extensions.isImage
 import com.moez.QKSMS.extensions.isVideo
 import com.moez.QKSMS.model.MmsPart
 import com.moez.QKSMS.util.GlideApp
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
-import kotlinx.android.synthetic.main.gallery_image_page.*
-import kotlinx.android.synthetic.main.gallery_image_page.view.*
-import kotlinx.android.synthetic.main.gallery_video_page.*
 import java.util.*
 import javax.inject.Inject
 
-class GalleryPagerAdapter @Inject constructor(private val context: Context) : QkRealmAdapter<MmsPart>() {
+class GalleryPagerAdapter @Inject constructor(private val context: Context) : QkRealmAdapter<MmsPart, ViewBinding>() {
 
     companion object {
         private const val VIEW_TYPE_INVALID = 0
@@ -58,10 +58,11 @@ class GalleryPagerAdapter @Inject constructor(private val context: Context) : Qk
     private val contentResolver = context.contentResolver
     private val exoPlayers = Collections.newSetFromMap(WeakHashMap<ExoPlayer?, Boolean>())
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QkViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QkViewHolder<ViewBinding> {
         val inflater = LayoutInflater.from(parent.context)
-        return QkViewHolder(when (viewType) {
-            VIEW_TYPE_IMAGE -> inflater.inflate(R.layout.gallery_image_page, parent, false).apply {
+        var binding: ViewBinding
+        if (viewType == VIEW_TYPE_IMAGE) {
+            binding = GalleryImagePageBinding.inflate(inflater, parent, false).apply {
 
                 // When calling the public setter, it doesn't allow the midscale to be the same as the
                 // maxscale or the minscale. We don't want 3 levels and we don't want to modify the library
@@ -81,37 +82,39 @@ class GalleryPagerAdapter @Inject constructor(private val context: Context) : Qk
                     }
                 }
             }
-
-            VIEW_TYPE_VIDEO -> inflater.inflate(R.layout.gallery_video_page, parent, false)
-
-            else -> inflater.inflate(R.layout.gallery_invalid_page, parent, false)
-
-        }.apply { setOnClickListener(clicks::onNext) })
+        } else if (viewType == VIEW_TYPE_VIDEO) {
+            binding = GalleryVideoPageBinding.inflate(inflater, parent, false)
+        } else {
+            binding = GalleryInvalidPageBinding.inflate(inflater, parent, false)
+        }
+        return QkViewHolder(binding).apply { itemView.setOnClickListener(clicks::onNext) }
     }
 
-    override fun onBindViewHolder(holder: QkViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: QkViewHolder<ViewBinding>, position: Int) {
         val part = getItem(position) ?: return
         when (getItemViewType(position)) {
             VIEW_TYPE_IMAGE -> {
+                val binding = holder.binding as GalleryImagePageBinding
                 // We need to explicitly request a gif from glide for animations to work
                 when (part.getUri().let(contentResolver::getType)) {
                     ContentType.IMAGE_GIF -> GlideApp.with(context)
                             .asGif()
                             .load(part.getUri())
-                            .into(holder.image)
+                            .into(binding.image)
 
                     else -> GlideApp.with(context)
                             .asBitmap()
                             .load(part.getUri())
-                            .into(holder.image)
+                            .into(binding.image)
                 }
             }
 
             VIEW_TYPE_VIDEO -> {
+                val binding = holder.binding as GalleryVideoPageBinding
                 val videoTrackSelectionFactory = AdaptiveTrackSelection.Factory(null)
                 val trackSelector = DefaultTrackSelector(videoTrackSelectionFactory)
                 val exoPlayer = ExoPlayerFactory.newSimpleInstance(context, trackSelector)
-                holder.video.player = exoPlayer
+                binding.video.player = exoPlayer
                 exoPlayers.add(exoPlayer)
 
                 val dataSourceFactory = DefaultDataSourceFactory(context, Util.getUserAgent(context, "QKSMS"))

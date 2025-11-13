@@ -25,7 +25,6 @@ import com.bluelinelabs.conductor.RouterTransaction
 import com.moez.QKSMS.R
 import com.moez.QKSMS.common.base.QkThemedActivity
 import dagger.android.AndroidInjection
-import kotlinx.android.synthetic.main.container_activity.*
 
 class ConversationInfoActivity : QkThemedActivity() {
 
@@ -36,7 +35,7 @@ class ConversationInfoActivity : QkThemedActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.container_activity)
 
-        router = Conductor.attachRouter(this, container, savedInstanceState)
+        router = Conductor.attachRouter(this, findViewById(R.id.container), savedInstanceState)
         if (!router.hasRootController()) {
             val threadId = intent.extras?.getLong("threadId") ?: 0L
             router.setRoot(RouterTransaction.with(ConversationInfoController(threadId)))

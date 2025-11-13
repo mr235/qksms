@@ -18,7 +18,9 @@
  */
 package com.moez.QKSMS.feature.conversationinfo
 
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.GridLayoutManager
 import com.bluelinelabs.conductor.RouterTransaction
@@ -28,6 +30,7 @@ import com.moez.QKSMS.common.QkChangeHandler
 import com.moez.QKSMS.common.base.QkController
 import com.moez.QKSMS.common.util.extensions.scrapViews
 import com.moez.QKSMS.common.widget.TextInputDialog
+import com.moez.QKSMS.databinding.ConversationInfoControllerBinding
 import com.moez.QKSMS.feature.blocking.BlockingDialog
 import com.moez.QKSMS.feature.conversationinfo.injection.ConversationInfoModule
 import com.moez.QKSMS.feature.themepicker.ThemePickerController
@@ -37,7 +40,6 @@ import com.uber.autodispose.autoDisposable
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
-import kotlinx.android.synthetic.main.conversation_info_controller.*
 import javax.inject.Inject
 
 class ConversationInfoController(
@@ -56,6 +58,8 @@ class ConversationInfoController(
     private val nameChangeSubject: Subject<String> = PublishSubject.create()
     private val confirmDeleteSubject: Subject<Unit> = PublishSubject.create()
 
+    private lateinit var binding: ConversationInfoControllerBinding
+
     init {
         appComponent
                 .conversationInfoBuilder()
@@ -66,10 +70,15 @@ class ConversationInfoController(
         layoutRes = R.layout.conversation_info_controller
     }
 
+    override fun getRootView(inflater: LayoutInflater, container: ViewGroup): View {
+        binding = ConversationInfoControllerBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
     override fun onViewCreated() {
-        recyclerView.adapter = adapter
-        recyclerView.addItemDecoration(GridSpacingItemDecoration(adapter, activity!!))
-        recyclerView.layoutManager = GridLayoutManager(activity, 3).apply {
+        binding.recyclerView.adapter = adapter
+        binding.recyclerView.addItemDecoration(GridSpacingItemDecoration(adapter, activity!!))
+        binding.recyclerView.layoutManager = GridLayoutManager(activity, 3).apply {
             spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                 override fun getSpanSize(position: Int): Int = if (adapter.getItemViewType(position) == 2) 1 else 3
             }
@@ -77,7 +86,7 @@ class ConversationInfoController(
 
         themedActivity?.theme
                 ?.autoDisposable(scope())
-                ?.subscribe { recyclerView.scrapViews() }
+                ?.subscribe { binding.recyclerView.scrapViews() }
     }
 
     override fun onAttach(view: View) {

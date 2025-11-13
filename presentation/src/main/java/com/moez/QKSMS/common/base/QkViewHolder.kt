@@ -20,8 +20,8 @@ package com.moez.QKSMS.common.base
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.extensions.LayoutContainer
+import androidx.viewbinding.ViewBinding
 
-class QkViewHolder(view: View) : RecyclerView.ViewHolder(view), LayoutContainer {
-    override val containerView: View = view
+open class QkViewHolder<VB: ViewBinding>(var binding: VB) : RecyclerView.ViewHolder(binding.root) {
+    val containerView: View = binding.root
 }

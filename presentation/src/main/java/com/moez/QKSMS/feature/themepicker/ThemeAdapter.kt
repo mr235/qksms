@@ -33,17 +33,16 @@ import com.moez.QKSMS.common.util.extensions.dpToPx
 import com.moez.QKSMS.common.util.extensions.setBackgroundTint
 import com.moez.QKSMS.common.util.extensions.setTint
 import com.moez.QKSMS.common.util.extensions.setVisible
+import com.moez.QKSMS.databinding.ThemeListItemBinding
+import com.moez.QKSMS.databinding.ThemePaletteListItemBinding
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
-import kotlinx.android.synthetic.main.theme_list_item.view.*
-import kotlinx.android.synthetic.main.theme_palette_list_item.*
-import kotlinx.android.synthetic.main.theme_palette_list_item.view.*
 import javax.inject.Inject
 
 class ThemeAdapter @Inject constructor(
     private val context: Context,
     private val colors: Colors
-) : QkAdapter<List<Int>>() {
+) : QkAdapter<List<Int>, ThemePaletteListItemBinding>() {
 
     val colorSelected: Subject<Int> = PublishSubject.create()
 
@@ -61,15 +60,16 @@ class ThemeAdapter @Inject constructor(
 
     private var iconTint = 0
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QkViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.theme_palette_list_item, parent, false)
-        view.palette.flexWrap = FlexWrap.WRAP
-        view.palette.flexDirection = FlexDirection.ROW
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QkViewHolder<ThemePaletteListItemBinding> {
+        val layoutInflater = LayoutInflater.from(parent.context)
+        val binding = ThemePaletteListItemBinding.inflate(layoutInflater, parent, false)
+        binding.palette.flexWrap = FlexWrap.WRAP
+        binding.palette.flexDirection = FlexDirection.ROW
 
-        return QkViewHolder(view)
+        return QkViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: QkViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: QkViewHolder<ThemePaletteListItemBinding>, position: Int) {
         val palette = getItem(position)
 
         val screenWidth = Resources.getSystem().displayMetrics.widthPixels
@@ -81,15 +81,16 @@ class ThemeAdapter @Inject constructor(
         }
         val swatchPadding = (screenWidth - size * 5) / 12
 
-        holder.palette.removeAllViews()
-        holder.palette.setPadding(swatchPadding, swatchPadding, swatchPadding, swatchPadding)
+        holder.binding.palette.removeAllViews()
+        holder.binding.palette.setPadding(swatchPadding, swatchPadding, swatchPadding, swatchPadding)
 
         (palette.subList(0, 5) + palette.subList(5, 10).reversed())
                 .mapIndexed { index, color ->
-                    LayoutInflater.from(context).inflate(R.layout.theme_list_item, holder.palette, false).apply {
+                    val inflater = LayoutInflater.from(context)
+                    ThemeListItemBinding.inflate(inflater, holder.binding.palette, false).apply {
 
                         // Send clicks to the selected subject
-                        setOnClickListener { colorSelected.onNext(color) }
+                        root.setOnClickListener { colorSelected.onNext(color) }
 
                         // Apply the color to the view
                         theme.setBackgroundTint(color)
@@ -99,7 +100,7 @@ class ThemeAdapter @Inject constructor(
                         check.setTint(iconTint)
 
                         // Update the size so that the spacing is perfectly even
-                        layoutParams = (layoutParams as FlexboxLayout.LayoutParams).apply {
+                        root.layoutParams = (root.layoutParams as FlexboxLayout.LayoutParams).apply {
                             height = size
                             width = size
                             isWrapBefore = index % 5 == 0
@@ -107,7 +108,7 @@ class ThemeAdapter @Inject constructor(
                         }
                     }
                 }
-                .forEach { theme -> holder.palette.addView(theme) }
+                .forEach { binding -> holder.binding.palette.addView(binding.root) }
     }
 
 }

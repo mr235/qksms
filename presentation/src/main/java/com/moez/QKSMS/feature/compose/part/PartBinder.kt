@@ -18,6 +18,7 @@
  */
 package com.moez.QKSMS.feature.compose.part
 
+import androidx.viewbinding.ViewBinding
 import com.moez.QKSMS.common.base.QkViewHolder
 import com.moez.QKSMS.common.util.Colors
 import com.moez.QKSMS.model.Message
@@ -25,7 +26,7 @@ import com.moez.QKSMS.model.MmsPart
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 
-abstract class PartBinder {
+abstract class PartBinder<VB : ViewBinding> {
 
     val clicks: Subject<Long> = PublishSubject.create()
 
@@ -36,7 +37,7 @@ abstract class PartBinder {
     abstract fun canBindPart(part: MmsPart): Boolean
 
     abstract fun bindPart(
-        holder: QkViewHolder,
+        holder: QkViewHolder<in VB>,
         part: MmsPart,
         message: Message,
         canGroupWithPrevious: Boolean,

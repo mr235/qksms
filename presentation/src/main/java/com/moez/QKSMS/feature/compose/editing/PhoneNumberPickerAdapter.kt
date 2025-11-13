@@ -25,18 +25,16 @@ import com.moez.QKSMS.R
 import com.moez.QKSMS.common.base.QkAdapter
 import com.moez.QKSMS.common.base.QkViewHolder
 import com.moez.QKSMS.common.util.extensions.forwardTouches
+import com.moez.QKSMS.databinding.PhoneNumberListItemBinding
 import com.moez.QKSMS.extensions.Optional
 import com.moez.QKSMS.model.PhoneNumber
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.Subject
-import kotlinx.android.synthetic.main.phone_number_list_item.*
-import kotlinx.android.synthetic.main.radio_preference_view.*
-import kotlinx.android.synthetic.main.radio_preference_view.view.*
 import javax.inject.Inject
 
 class PhoneNumberPickerAdapter @Inject constructor(
     private val context: Context
-) : QkAdapter<PhoneNumber>() {
+) : QkAdapter<PhoneNumber, PhoneNumberListItemBinding>() {
 
     val selectedItemChanges: Subject<Optional<Long>> = BehaviorSubject.create()
 
@@ -48,25 +46,25 @@ class PhoneNumberPickerAdapter @Inject constructor(
             selectedItemChanges.onNext(Optional(value))
         }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QkViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QkViewHolder<PhoneNumberListItemBinding> {
         val inflater = LayoutInflater.from(parent.context)
-        val view = inflater.inflate(R.layout.phone_number_list_item, parent, false)
-        return QkViewHolder(view).apply {
-            radioButton.forwardTouches(itemView)
+        val binding = PhoneNumberListItemBinding.inflate(inflater, parent, false)
+        return QkViewHolder(binding).apply {
+            binding.number.getRadioButton().forwardTouches(itemView)
 
-            view.setOnClickListener {
+            itemView.setOnClickListener {
                 val phoneNumber = getItem(adapterPosition)
                 selectedItem = phoneNumber.id
             }
         }
     }
 
-    override fun onBindViewHolder(holder: QkViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: QkViewHolder<PhoneNumberListItemBinding>, position: Int) {
         val phoneNumber = getItem(position)
 
-        holder.number.radioButton.isChecked = phoneNumber.id == selectedItem
-        holder.number.titleView.text = phoneNumber.address
-        holder.number.summaryView.text = when (phoneNumber.isDefault) {
+        holder.binding.number.getRadioButton().isChecked = phoneNumber.id == selectedItem
+        holder.binding.number.getTitleView().text = phoneNumber.address
+        holder.binding.number.getSummaryView().text = when (phoneNumber.isDefault) {
             true -> context.getString(R.string.compose_number_picker_default, phoneNumber.type)
             false -> phoneNumber.type
         }

@@ -22,11 +22,13 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.viewbinding.ViewBinding
 import com.bumptech.glide.Glide
-import com.moez.QKSMS.R
 import com.moez.QKSMS.common.base.QkAdapter
 import com.moez.QKSMS.common.base.QkViewHolder
 import com.moez.QKSMS.common.util.extensions.getDisplayName
+import com.moez.QKSMS.databinding.AttachmentContactListItemBinding
+import com.moez.QKSMS.databinding.AttachmentImageListItemBinding
 import com.moez.QKSMS.extensions.mapNotNull
 import com.moez.QKSMS.model.Attachment
 import ezvcard.Ezvcard
@@ -35,14 +37,11 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
-import kotlinx.android.synthetic.main.attachment_contact_list_item.*
-import kotlinx.android.synthetic.main.attachment_image_list_item.*
-import kotlinx.android.synthetic.main.attachment_image_list_item.view.*
 import javax.inject.Inject
 
 class AttachmentAdapter @Inject constructor(
     private val context: Context
-) : QkAdapter<Attachment>() {
+) : QkAdapter<Attachment, ViewBinding>() {
 
     companion object {
         private const val VIEW_TYPE_IMAGE = 0
@@ -51,32 +50,32 @@ class AttachmentAdapter @Inject constructor(
 
     val attachmentDeleted: Subject<Attachment> = PublishSubject.create()
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QkViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QkViewHolder<ViewBinding> {
         val inflater = LayoutInflater.from(parent.context)
-        val view = when (viewType) {
-            VIEW_TYPE_IMAGE -> inflater.inflate(R.layout.attachment_image_list_item, parent, false)
+        val binding = when (viewType) {
+            VIEW_TYPE_IMAGE -> AttachmentImageListItemBinding.inflate(inflater, parent, false)
                     .apply { thumbnailBounds.clipToOutline = true }
 
-            VIEW_TYPE_CONTACT -> inflater.inflate(R.layout.attachment_contact_list_item, parent, false)
+            VIEW_TYPE_CONTACT -> AttachmentContactListItemBinding.inflate(inflater, parent, false)
 
             else -> null!! // Impossible
         }
 
-        return QkViewHolder(view).apply {
-            view.setOnClickListener {
+        return QkViewHolder(binding).apply {
+            binding.root.setOnClickListener {
                 val attachment = getItem(adapterPosition)
                 attachmentDeleted.onNext(attachment)
             }
         }
     }
 
-    override fun onBindViewHolder(holder: QkViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: QkViewHolder<ViewBinding>, position: Int) {
         val attachment = getItem(position)
 
         when (attachment) {
             is Attachment.Image -> Glide.with(context)
                     .load(attachment.getUri())
-                    .into(holder.thumbnail)
+                    .into((holder.binding as AttachmentImageListItemBinding).thumbnail)
 
             is Attachment.Contact -> Observable.just(attachment.vCard)
                     .mapNotNull { vCard -> Ezvcard.parse(vCard).first() }
@@ -84,8 +83,9 @@ class AttachmentAdapter @Inject constructor(
                     .subscribeOn(Schedulers.computation())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe { displayName ->
-                        holder.name?.text = displayName
-                        holder.name?.isVisible = displayName.isNotEmpty()
+                        val textView = (holder.binding as? AttachmentContactListItemBinding)?.name
+                        textView?.text = displayName
+                        textView?.isVisible = displayName.isNotEmpty()
                     }
         }
     }

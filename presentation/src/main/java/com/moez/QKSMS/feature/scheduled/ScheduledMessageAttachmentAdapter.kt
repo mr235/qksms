@@ -22,29 +22,28 @@ import android.content.Context
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.moez.QKSMS.R
 import com.moez.QKSMS.common.base.QkAdapter
 import com.moez.QKSMS.common.base.QkViewHolder
+import com.moez.QKSMS.databinding.ScheduledMessageImageListItemBinding
 import com.moez.QKSMS.util.GlideApp
-import kotlinx.android.synthetic.main.attachment_image_list_item.view.*
-import kotlinx.android.synthetic.main.scheduled_message_image_list_item.*
 import javax.inject.Inject
 
 class ScheduledMessageAttachmentAdapter @Inject constructor(
     private val context: Context
-) : QkAdapter<Uri>() {
+) : QkAdapter<Uri, ScheduledMessageImageListItemBinding>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QkViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.scheduled_message_image_list_item, parent, false)
-        view.thumbnail.clipToOutline = true
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QkViewHolder<ScheduledMessageImageListItemBinding> {
+        val layoutInflater = LayoutInflater.from(parent.context)
+        val binding = ScheduledMessageImageListItemBinding.inflate(layoutInflater, parent, false)
+        binding.thumbnail.clipToOutline = true
 
-        return QkViewHolder(view)
+        return QkViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: QkViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: QkViewHolder<ScheduledMessageImageListItemBinding>, position: Int) {
         val attachment = getItem(position)
 
-        GlideApp.with(context).load(attachment).into(holder.thumbnail)
+        GlideApp.with(context).load(attachment).into(holder.binding.thumbnail)
     }
 
 }

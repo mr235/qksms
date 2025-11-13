@@ -22,6 +22,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.LayoutInflater
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProviders
 import com.jakewharton.rxbinding2.view.clicks
@@ -35,6 +36,7 @@ import com.moez.QKSMS.common.util.extensions.resolveThemeColor
 import com.moez.QKSMS.common.util.extensions.setBackgroundTint
 import com.moez.QKSMS.common.util.extensions.showKeyboard
 import com.moez.QKSMS.common.widget.QkDialog
+import com.moez.QKSMS.databinding.ContactsActivityBinding
 import com.moez.QKSMS.extensions.Optional
 import com.moez.QKSMS.feature.compose.editing.ComposeItem
 import com.moez.QKSMS.feature.compose.editing.ComposeItemAdapter
@@ -44,7 +46,6 @@ import dagger.android.AndroidInjection
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
-import kotlinx.android.synthetic.main.contacts_activity.*
 import javax.inject.Inject
 
 class ContactsActivity : QkThemedActivity(), ContactsContract {
@@ -54,13 +55,19 @@ class ContactsActivity : QkThemedActivity(), ContactsContract {
         const val ChipsKey = "chips"
     }
 
+    private val binding: ContactsActivityBinding by lazy {
+        ContactsActivityBinding.inflate(
+            LayoutInflater.from(this)
+        )
+    }
+
     @Inject lateinit var contactsAdapter: ComposeItemAdapter
     @Inject lateinit var phoneNumberAdapter: PhoneNumberPickerAdapter
     @Inject lateinit var viewModelFactory: ViewModelFactory
 
-    override val queryChangedIntent: Observable<CharSequence> by lazy { search.textChanges() }
-    override val queryClearedIntent: Observable<*> by lazy { cancel.clicks() }
-    override val queryEditorActionIntent: Observable<Int> by lazy { search.editorActions() }
+    override val queryChangedIntent: Observable<CharSequence> by lazy { binding.search.textChanges() }
+    override val queryClearedIntent: Observable<*> by lazy { binding.cancel.clicks() }
+    override val queryEditorActionIntent: Observable<Int> by lazy { binding.search.editorActions() }
     override val composeItemPressedIntent: Subject<ComposeItem> by lazy { contactsAdapter.clicks }
     override val composeItemLongPressedIntent: Subject<ComposeItem> by lazy { contactsAdapter.longClicks }
     override val phoneNumberSelectedIntent: Subject<Optional<Long>> by lazy { phoneNumberAdapter.selectedItemChanges }
@@ -87,11 +94,11 @@ class ContactsActivity : QkThemedActivity(), ContactsContract {
         showBackButton(true)
         viewModel.bindView(this)
 
-        contacts.adapter = contactsAdapter
+        binding.contacts.adapter = contactsAdapter
     }
 
     override fun render(state: ContactsState) {
-        cancel.isVisible = state.query.length > 1
+        binding.cancel.isVisible = state.query.length > 1
 
         contactsAdapter.data = state.composeItems
 
@@ -105,17 +112,17 @@ class ContactsActivity : QkThemedActivity(), ContactsContract {
     }
 
     override fun clearQuery() {
-        search.text = null
+        binding.search.text = null
     }
 
     override fun openKeyboard() {
-        search.postDelayed({
-            search.showKeyboard()
+        binding.search.postDelayed({
+            binding.search.showKeyboard()
         }, 200)
     }
 
     override fun finish(result: HashMap<String, String?>) {
-        search.hideKeyboard()
+        binding.search.hideKeyboard()
         val intent = Intent().putExtra(ChipsKey, result)
         setResult(Activity.RESULT_OK, intent)
         finish()

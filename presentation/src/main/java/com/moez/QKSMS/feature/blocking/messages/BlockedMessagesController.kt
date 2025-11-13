@@ -20,19 +20,21 @@ package com.moez.QKSMS.feature.blocking.messages
 
 import android.app.AlertDialog
 import android.content.Context
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
+import androidx.appcompat.widget.Toolbar
 import com.moez.QKSMS.R
 import com.moez.QKSMS.common.base.QkController
 import com.moez.QKSMS.common.util.Colors
+import com.moez.QKSMS.databinding.BlockedMessagesControllerBinding
 import com.moez.QKSMS.feature.blocking.BlockingDialog
 import com.moez.QKSMS.injection.appComponent
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
-import kotlinx.android.synthetic.main.blocked_messages_controller.*
-import kotlinx.android.synthetic.main.container_activity.*
 import javax.inject.Inject
 
 class BlockedMessagesController : QkController<BlockedMessagesView, BlockedMessagesState, BlockedMessagesPresenter>(),
@@ -51,16 +53,23 @@ class BlockedMessagesController : QkController<BlockedMessagesView, BlockedMessa
     @Inject lateinit var context: Context
     @Inject override lateinit var presenter: BlockedMessagesPresenter
 
+    private lateinit var binding: BlockedMessagesControllerBinding
+
     init {
         appComponent.inject(this)
         retainViewMode = RetainViewMode.RETAIN_DETACH
         layoutRes = R.layout.blocked_messages_controller
     }
 
+    override fun getRootView(inflater: LayoutInflater, container: ViewGroup): View {
+        binding = BlockedMessagesControllerBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
     override fun onViewCreated() {
         super.onViewCreated()
-        blockedMessagesAdapter.emptyView = empty
-        conversations.adapter = blockedMessagesAdapter
+        blockedMessagesAdapter.emptyView = binding.empty
+        binding.conversations.adapter = blockedMessagesAdapter
     }
 
     override fun onAttach(view: View) {
@@ -90,8 +99,8 @@ class BlockedMessagesController : QkController<BlockedMessagesView, BlockedMessa
     override fun render(state: BlockedMessagesState) {
         blockedMessagesAdapter.updateData(state.data)
 
-        themedActivity?.toolbar?.menu?.findItem(R.id.block)?.isVisible = state.selected > 0
-        themedActivity?.toolbar?.menu?.findItem(R.id.delete)?.isVisible = state.selected > 0
+        themedActivity?.findViewById<Toolbar>(R.id.toolbar)?.menu?.findItem(R.id.block)?.isVisible = state.selected > 0
+        themedActivity?.findViewById<Toolbar>(R.id.toolbar)?.menu?.findItem(R.id.delete)?.isVisible = state.selected > 0
 
         setTitle(when (state.selected) {
             0 -> context.getString(R.string.blocked_messages_title)

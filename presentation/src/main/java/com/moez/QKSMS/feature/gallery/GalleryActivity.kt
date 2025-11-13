@@ -33,12 +33,12 @@ import com.moez.QKSMS.R
 import com.moez.QKSMS.common.base.QkActivity
 import com.moez.QKSMS.common.util.DateFormatter
 import com.moez.QKSMS.common.util.extensions.setVisible
+import com.moez.QKSMS.databinding.GalleryActivityBinding
 import com.moez.QKSMS.model.MmsPart
 import dagger.android.AndroidInjection
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
-import kotlinx.android.synthetic.main.gallery_activity.*
 import javax.inject.Inject
 
 class GalleryActivity : QkActivity(), GalleryView {
@@ -46,6 +46,8 @@ class GalleryActivity : QkActivity(), GalleryView {
     @Inject lateinit var dateFormatter: DateFormatter
     @Inject lateinit var viewModelFactory: ViewModelProvider.Factory
     @Inject lateinit var pagerAdapter: GalleryPagerAdapter
+
+    private lateinit var binding: GalleryActivityBinding
 
     val partId by lazy { intent.getLongExtra("partId", 0L) }
 
@@ -57,12 +59,13 @@ class GalleryActivity : QkActivity(), GalleryView {
         delegate.localNightMode = AppCompatDelegate.MODE_NIGHT_YES
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.gallery_activity)
+        binding = GalleryActivityBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         showBackButton(true)
         viewModel.bindView(this)
 
-        pager.adapter = pagerAdapter
-        pager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+        binding.pager.adapter = pagerAdapter
+        binding.pager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 this@GalleryActivity.onPageSelected(position)
             }
@@ -74,7 +77,7 @@ class GalleryActivity : QkActivity(), GalleryView {
                         ?.indexOfFirst { part -> part.id == partId }
                         ?.let { index ->
                             onPageSelected(index)
-                            pager.setCurrentItem(index, false)
+                            binding.pager.setCurrentItem(index, false)
                             pagerAdapter.unregisterAdapterDataObserver(this)
                         }
             }
@@ -82,15 +85,15 @@ class GalleryActivity : QkActivity(), GalleryView {
     }
 
     fun onPageSelected(position: Int) {
-        toolbarSubtitle.text = pagerAdapter.getItem(position)?.messages?.firstOrNull()?.date
+        binding.toolbarSubtitle.text = pagerAdapter.getItem(position)?.messages?.firstOrNull()?.date
                 ?.let(dateFormatter::getDetailedTimestamp)
-        toolbarSubtitle.isVisible = toolbarTitle.text.isNotBlank()
+        binding.toolbarSubtitle.isVisible = binding.toolbarTitle.text.isNotBlank()
 
         pagerAdapter.getItem(position)?.run(pageChangedSubject::onNext)
     }
 
     override fun render(state: GalleryState) {
-        toolbar.setVisible(state.navigationVisible)
+        binding.toolbar.setVisible(state.navigationVisible)
 
         title = state.title
         pagerAdapter.updateData(state.parts)

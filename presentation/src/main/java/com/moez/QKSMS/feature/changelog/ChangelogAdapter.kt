@@ -25,10 +25,10 @@ import android.view.ViewGroup
 import com.moez.QKSMS.R
 import com.moez.QKSMS.common.base.QkAdapter
 import com.moez.QKSMS.common.base.QkViewHolder
+import com.moez.QKSMS.databinding.ChangelogListItemBinding
 import com.moez.QKSMS.manager.ChangelogManager
-import kotlinx.android.synthetic.main.changelog_list_item.*
 
-class ChangelogAdapter(private val context: Context) : QkAdapter<ChangelogAdapter.ChangelogItem>() {
+class ChangelogAdapter(private val context: Context) : QkAdapter<ChangelogAdapter.ChangelogItem, ChangelogListItemBinding>() {
 
     data class ChangelogItem(val type: Int, val label: String)
 
@@ -52,19 +52,20 @@ class ChangelogAdapter(private val context: Context) : QkAdapter<ChangelogAdapte
         data = changes
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QkViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.changelog_list_item, parent, false)
-        return QkViewHolder(view).apply {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QkViewHolder<ChangelogListItemBinding> {
+        val layoutInflater = LayoutInflater.from(parent.context)
+        val binding = ChangelogListItemBinding.inflate(layoutInflater, parent, false)
+        return QkViewHolder(binding).apply {
             if (viewType == 0) {
-                changelogItem.setTypeface(changelogItem.typeface, Typeface.BOLD)
+                binding.changelogItem.setTypeface(binding.changelogItem.typeface, Typeface.BOLD)
             }
         }
     }
 
-    override fun onBindViewHolder(holder: QkViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: QkViewHolder<ChangelogListItemBinding>, position: Int) {
         val item = getItem(position)
 
-        holder.changelogItem.text = item.label
+        holder.binding.changelogItem.text = item.label
     }
 
     override fun getItemViewType(position: Int): Int {

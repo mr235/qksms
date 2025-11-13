@@ -21,6 +21,8 @@ package com.moez.QKSMS.feature.compose.part
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.viewbinding.ViewBinding
+import com.moez.QKSMS.R
 import com.moez.QKSMS.common.base.QkAdapter
 import com.moez.QKSMS.common.base.QkViewHolder
 import com.moez.QKSMS.common.util.Colors
@@ -31,15 +33,18 @@ import com.moez.QKSMS.feature.compose.BubbleUtils.canGroup
 import com.moez.QKSMS.model.Message
 import com.moez.QKSMS.model.MmsPart
 import io.reactivex.Observable
-import kotlinx.android.synthetic.main.message_list_item_in.*
 import javax.inject.Inject
+import androidx.core.view.isVisible
+import com.moez.QKSMS.databinding.MmsFileListItemBinding
+import com.moez.QKSMS.databinding.MmsPreviewListItemBinding
+import com.moez.QKSMS.databinding.MmsVcardListItemBinding
 
 class PartsAdapter @Inject constructor(
     colors: Colors,
     fileBinder: FileBinder,
     mediaBinder: MediaBinder,
-    vCardBinder: VCardBinder
-) : QkAdapter<MmsPart>() {
+    vCardBinder: VCardBinder,
+) : QkAdapter<MmsPart, ViewBinding>() {
 
     private val partBinders = listOf(mediaBinder, vCardBinder, fileBinder)
 
@@ -54,26 +59,37 @@ class PartsAdapter @Inject constructor(
     private lateinit var message: Message
     private var previous: Message? = null
     private var next: Message? = null
-    private var holder: QkViewHolder? = null
+    private var holder: QkViewHolder<ViewBinding>? = null
     private var bodyVisible: Boolean = true
 
-    fun setData(message: Message, previous: Message?, next: Message?, holder: QkViewHolder) {
+    fun setData(message: Message, previous: Message?, next: Message?, holder: QkViewHolder<ViewBinding>) {
         this.message = message
         this.previous = previous
         this.next = next
         this.holder = holder
-        this.bodyVisible = holder.body.visibility == View.VISIBLE
+        this.bodyVisible = holder.itemView.findViewById<View>(R.id.body).isVisible
         this.data = message.parts.filter { !it.isSmil() && !it.isText() }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QkViewHolder {
-        val layout = partBinders.getOrNull(viewType)?.partLayout ?: 0
-        val view = LayoutInflater.from(parent.context).inflate(layout, parent, false)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QkViewHolder<ViewBinding> {
+        val binder = partBinders.getOrNull(viewType)
+        val layout = binder?.partLayout ?: 0
+
+        val inflater = LayoutInflater.from(parent.context)
+        val view = inflater.inflate(layout, parent, false)
+        var binding: ViewBinding? = null
+        if (binder is MediaBinder) {
+            binding = MmsPreviewListItemBinding.inflate(inflater, parent, false)
+        } else if (binder is VCardBinder) {
+            binding = MmsVcardListItemBinding.inflate(inflater, parent, false)
+        } else if (binder is FileBinder) {
+            binding = MmsFileListItemBinding.inflate(inflater, parent, false)
+        }
         holder?.containerView?.let(view::forwardTouches)
-        return QkViewHolder(view)
+        return QkViewHolder(binding!!)
     }
 
-    override fun onBindViewHolder(holder: QkViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: QkViewHolder<ViewBinding>, position: Int) {
         val part = data[position]
 
         val canGroupWithPrevious = canGroup(message, previous) || position > 0

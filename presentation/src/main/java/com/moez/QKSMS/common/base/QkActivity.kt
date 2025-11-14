@@ -22,6 +22,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.moez.QKSMS.R
@@ -50,6 +51,12 @@ abstract class QkActivity : AppCompatActivity() {
 
     override fun setContentView(layoutResID: Int) {
         super.setContentView(layoutResID)
+        setSupportActionBar(findViewById(R.id.toolbar))
+        title = title // The title may have been set before layout inflation
+    }
+
+    override fun setContentView(view: View?) {
+        super.setContentView(view)
         setSupportActionBar(findViewById(R.id.toolbar))
         title = title // The title may have been set before layout inflation
     }

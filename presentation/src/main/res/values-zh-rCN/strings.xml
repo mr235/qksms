@@ -270,11 +270,18 @@
     <string name="blocking_manager_copy_summary">继续前往%s并复制到您现有的已屏蔽号码</string>
     <string name="blocked_numbers_title">已屏蔽的号码</string>
     <string name="blocked_numbers_empty">您所屏蔽的号码将会在这里显示</string>
+    <string name="blocked_messages_notification_empty">您所屏蔽的通知栏文本将会在这里显示</string>
     <string name="blocked_numbers_add_cd">屏蔽新的号码</string>
+    <string name="blocked_messages_notification_content_add">屏蔽新的通知栏消息内容</string>
     <string name="blocked_numbers_dialog_title">屏蔽短信自</string>
     <string name="blocked_numbers_dialog_hint">电话号码</string>
     <string name="blocked_numbers_dialog_block">屏蔽</string>
     <string name="blocked_messages_title">已屏蔽的信息</string>
+
+    <string name="blocked_messages_notification_dialog_title">屏蔽通知栏消息</string>
+    <string name="blocked_messages_notification_dialog_hint">消息内容</string>
+    <string name="blocked_messages_notification_dialog_block">屏蔽</string>
+    <string name="blocked_messages_notification_title">不在通知栏显示的消息</string>
     <string name="blocked_messages_empty">您所屏蔽的信息将会在这里显示</string>
     <string name="blocking_block_title">屏蔽</string>
     <string name="blocking_unblock_title">取消屏蔽</string>

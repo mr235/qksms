@@ -18,6 +18,7 @@
  */
 package com.moez.QKSMS.repository
 
+import com.moez.QKSMS.model.BlockedMessageNotification
 import com.moez.QKSMS.model.BlockedNumber
 import io.realm.RealmResults
 
@@ -26,6 +27,12 @@ interface BlockingRepository {
     fun blockNumber(vararg addresses: String)
 
     fun getBlockedNumbers(): RealmResults<BlockedNumber>
+
+    fun getBlockedMessagesNotification(): RealmResults<BlockedMessageNotification>
+
+    fun blockMessageNotification(vararg contents: String)
+
+    fun unblockMessageNotification(id: Long)
 
     fun getBlockedNumber(id: Long): BlockedNumber?
 

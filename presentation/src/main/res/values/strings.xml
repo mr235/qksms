@@ -307,6 +307,13 @@
     <string name="blocked_numbers_dialog_hint">Phone number</string>
     <string name="blocked_numbers_dialog_block">Block</string>
 
+    <string name="blocked_messages_notification_dialog_title">Block message notification</string>
+    <string name="blocked_messages_notification_dialog_hint">Message content</string>
+    <string name="blocked_messages_notification_dialog_block">Block</string>
+    <string name="blocked_messages_notification_title">Messages not displayed in the notification bar</string>
+    <string name="blocked_messages_notification_empty">Your blocked messages content will appear here</string>
+    <string name="blocked_messages_notification_content_add">Block a new message content</string>
+
     <string name="blocked_messages_title">Blocked messages</string>
     <string name="blocked_messages_empty">Your blocked messages will appear here</string>
 

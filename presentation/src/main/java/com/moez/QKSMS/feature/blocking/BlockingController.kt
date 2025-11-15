@@ -32,8 +32,10 @@ import com.moez.QKSMS.common.widget.QkSwitch
 import com.moez.QKSMS.databinding.BlockingControllerBinding
 import com.moez.QKSMS.feature.blocking.manager.BlockingManagerController
 import com.moez.QKSMS.feature.blocking.messages.BlockedMessagesController
+import com.moez.QKSMS.feature.blocking.notification.BlockedMessagesNotificationController
 import com.moez.QKSMS.feature.blocking.numbers.BlockedNumbersController
 import com.moez.QKSMS.injection.appComponent
+import io.reactivex.Observable
 import javax.inject.Inject
 
 class BlockingController : QkController<BlockingView, BlockingState, BlockingPresenter>(), BlockingView {
@@ -42,6 +44,7 @@ class BlockingController : QkController<BlockingView, BlockingState, BlockingPre
     override val blockedNumbersIntent by lazy { binding.blockedNumbers.clicks() }
     override val blockedMessagesIntent by lazy { binding.blockedMessages.clicks() }
     override val dropClickedIntent by lazy { binding.drop.clicks() }
+    override val blockedMessagesNotificationIntent by lazy { binding.ignoreNotifications.clicks() }
 
     private lateinit var binding: BlockingControllerBinding
 
@@ -51,7 +54,6 @@ class BlockingController : QkController<BlockingView, BlockingState, BlockingPre
     init {
         appComponent.inject(this)
         retainViewMode = RetainViewMode.RETAIN_DETACH
-        layoutRes = R.layout.blocking_controller
     }
 
     override fun getRootView(inflater: LayoutInflater, container: ViewGroup): View {
@@ -81,6 +83,12 @@ class BlockingController : QkController<BlockingView, BlockingState, BlockingPre
         router.pushController(RouterTransaction.with(BlockedNumbersController())
                 .pushChangeHandler(QkChangeHandler())
                 .popChangeHandler(QkChangeHandler()))
+    }
+
+    override fun openBlockedMessagesNotification() {
+        router.pushController(RouterTransaction.with(BlockedMessagesNotificationController())
+            .pushChangeHandler(QkChangeHandler())
+            .popChangeHandler(QkChangeHandler()))
     }
 
     override fun openBlockedMessages() {

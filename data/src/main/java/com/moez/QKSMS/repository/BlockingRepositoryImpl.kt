@@ -19,6 +19,7 @@
 package com.moez.QKSMS.repository
 
 import com.moez.QKSMS.extensions.anyOf
+import com.moez.QKSMS.model.BlockedMessageNotification
 import com.moez.QKSMS.model.BlockedNumber
 import com.moez.QKSMS.util.PhoneNumberUtils
 import io.realm.Realm
@@ -41,8 +42,8 @@ class BlockingRepositoryImpl @Inject constructor(
             val maxId = realm.where(BlockedNumber::class.java)
                     .max("id")?.toLong() ?: -1
 
-            realm.executeTransaction {
-                realm.insert(newAddresses.mapIndexed { index, address ->
+            realm.executeTransactionAsync { r ->
+                r.insert(newAddresses.mapIndexed { index, address ->
                     BlockedNumber(maxId + 1 + index, address)
                 })
             }
@@ -53,6 +54,43 @@ class BlockingRepositoryImpl @Inject constructor(
         return Realm.getDefaultInstance()
                 .where(BlockedNumber::class.java)
                 .findAllAsync()
+    }
+
+    override fun getBlockedMessagesNotification(): RealmResults<BlockedMessageNotification> {
+        return Realm.getDefaultInstance()
+            .where(BlockedMessageNotification::class.java)
+            .findAllAsync()
+    }
+
+    override fun blockMessageNotification(vararg contents: String) {
+        Realm.getDefaultInstance().use { realm ->
+            realm.refresh()
+
+            val blockedMessage = realm.where(BlockedMessageNotification::class.java).findAll()
+            val newMessages = contents.filter { content ->
+                blockedMessage.none { message -> message.content.equals(content, true) }
+            }
+
+            val maxId = realm.where(BlockedMessageNotification::class.java)
+                .max("id")?.toLong() ?: -1
+
+            realm.executeTransactionAsync { r ->
+                r.insert(newMessages.mapIndexed { index, content ->
+                    BlockedMessageNotification(maxId + 1 + index, content)
+                })
+            }
+        }
+    }
+
+    override fun unblockMessageNotification(id: Long) {
+        Realm.getDefaultInstance().use { realm ->
+            realm.executeTransactionAsync { r ->
+                r.where(BlockedMessageNotification::class.java)
+                    .equalTo("id", id)
+                    .findAll()
+                    .deleteAllFromRealm()
+            }
+        }
     }
 
     override fun getBlockedNumber(id: Long): BlockedNumber? {
@@ -72,8 +110,8 @@ class BlockingRepositoryImpl @Inject constructor(
 
     override fun unblockNumber(id: Long) {
         Realm.getDefaultInstance().use { realm ->
-            realm.executeTransaction {
-                realm.where(BlockedNumber::class.java)
+            realm.executeTransactionAsync { r ->
+                r.where(BlockedNumber::class.java)
                         .equalTo("id", id)
                         .findAll()
                         .deleteAllFromRealm()
@@ -91,8 +129,8 @@ class BlockingRepositoryImpl @Inject constructor(
                     .map { number -> number.id }
                     .toLongArray()
 
-            realm.executeTransaction {
-                realm.where(BlockedNumber::class.java)
+            realm.executeTransactionAsync { r ->
+                r.where(BlockedNumber::class.java)
                         .anyOf("id", ids)
                         .findAll()
                         .deleteAllFromRealm()

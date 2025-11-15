@@ -36,7 +36,7 @@ class QkRealmMigration @Inject constructor(
 ) : RealmMigration {
 
     companion object {
-        const val SchemaVersion: Long = 11
+        const val SchemaVersion: Long = 12
     }
 
     @SuppressLint("ApplySharedPref")
@@ -233,6 +233,15 @@ class QkRealmMigration @Inject constructor(
 
             version++
         }
+
+        if (version == 11L) {
+            realm.schema.create("BlockedMessageNotification")
+                .addField("id", Long::class.java, FieldAttribute.PRIMARY_KEY, FieldAttribute.REQUIRED)
+                .addField("content", String::class.java, FieldAttribute.REQUIRED)
+
+            version++
+        }
+        println("version: $version -> newVersion $newVersion")
 
         check(version >= newVersion) { "Migration missing from v$oldVersion to v$newVersion" }
     }

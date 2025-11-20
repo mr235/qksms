@@ -26,7 +26,10 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.sqlite.SqliteWrapper;
 import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
+import android.net.NetworkRequest;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -40,6 +43,9 @@ import android.provider.Telephony.MmsSms;
 import android.provider.Telephony.MmsSms.PendingMessages;
 import android.text.TextUtils;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+
 import com.android.mms.util.RateController;
 import com.google.android.mms.MmsException;
 import com.google.android.mms.pdu_alt.GenericPdu;
@@ -455,21 +461,21 @@ public class TransactionService extends Service implements Observer {
         }
     }
 
-    private synchronized void createWakeLock() {
-        // Create a new wake lock if we haven't made one yet.
-        if (mWakeLock == null) {
-            PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
-            mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MMS Connectivity");
-            mWakeLock.setReferenceCounted(false);
-        }
-    }
-
-    private void acquireWakeLock() {
-        // It's okay to double-acquire this because we are not using it
-        // in reference-counted mode.
-        Timber.v("mms acquireWakeLock");
-        mWakeLock.acquire();
-    }
+//    private synchronized void createWakeLock() {
+//        // Create a new wake lock if we haven't made one yet.
+//        if (mWakeLock == null) {
+//            PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
+//            mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MMS Connectivity");
+//            mWakeLock.setReferenceCounted(false);
+//        }
+//    }
+//
+//    private void acquireWakeLock() {
+//        // It's okay to double-acquire this because we are not using it
+//        // in reference-counted mode.
+//        Timber.v("mms acquireWakeLock");
+//        mWakeLock.acquire();
+//    }
 
     private void releaseWakeLock() {
         // Don't release the wake lock if it hasn't been created and acquired.
@@ -479,31 +485,40 @@ public class TransactionService extends Service implements Observer {
         }
     }
 
-    protected int beginMmsConnectivity() throws IOException {
+    protected void beginMmsConnectivity(ConnectivityManager.NetworkCallback callback) {
         Timber.v("beginMmsConnectivity");
         // Take a wake lock so we don't fall asleep before the message is downloaded.
-        createWakeLock();
+//        createWakeLock();
 
         if (Utils.isMmsOverWifiEnabled(this)) {
             NetworkInfo niWF = mConnMgr.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
             if ((niWF != null) && (niWF.isConnected())) {
                 Timber.v("beginMmsConnectivity: Wifi active");
-                return 0;
+                callback.onAvailable(null);
+                return;
             }
         }
 
-        int result = mConnMgr.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE, "enableMMS");
+        NetworkRequest.Builder builder = new NetworkRequest.Builder();
+        builder.addCapability(NetworkCapabilities.NET_CAPABILITY_MMS);
+        builder.addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR);
 
-        Timber.v("beginMmsConnectivity: result=" + result);
+        NetworkRequest networkRequest = builder.build();
 
-        switch (result) {
-            case 0:
-            case 1:
-                acquireWakeLock();
-                return result;
-        }
+        mConnMgr.requestNetwork(networkRequest, callback);
 
-        throw new IOException("Cannot establish MMS connectivity");
+//        int result = mConnMgr.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE, "enableMMS");
+//
+//        Timber.v("beginMmsConnectivity: result=" + result);
+//
+//        switch (result) {
+//            case 0:
+//            case 1:
+//                acquireWakeLock();
+//                return result;
+//        }
+//
+//        throw new IOException("Cannot establish MMS connectivity");
     }
 
     protected void endMmsConnectivity() {
@@ -579,22 +594,31 @@ public class TransactionService extends Service implements Observer {
 
                     Timber.v("handle EVENT_CONTINUE_MMS_CONNECTIVITY event...");
 
-                    try {
-                        int result = beginMmsConnectivity();
-                        if (result != 0) {
-                            Timber.v("Extending MMS connectivity returned " + result +
-                                    " instead of APN_ALREADY_ACTIVE");
-                            // Just wait for connectivity startup without
-                            // any new request of APN switch.
-                            return;
+//                    try {
+                    beginMmsConnectivity(new ConnectivityManager.NetworkCallback() {
+                        @Override
+                        public void onAvailable(@NonNull Network network) {
+                            super.onAvailable(network);
                         }
-                    } catch (IOException e) {
-                        Timber.w("Attempt to extend use of MMS connectivity failed");
-                        return;
-                    }
 
-                    // Restart timer
-                    renewMmsConnectivity();
+                        @Override
+                        public void onUnavailable() {
+                            super.onUnavailable();
+                            // Restart timer
+                            renewMmsConnectivity();
+                        }
+                    });
+//                        if (result != 0) {
+//                            Timber.v("Extending MMS connectivity returned " + result +
+//                                    " instead of APN_ALREADY_ACTIVE");
+//                            // Just wait for connectivity startup without
+//                            // any new request of APN switch.
+//                            return;
+//                        }
+//                    } catch (IOException e) {
+//                        Timber.w("Attempt to extend use of MMS connectivity failed");
+//                        return;
+//                    }
                     return;
 
                 case EVENT_TRANSACTION_REQUEST:
@@ -799,13 +823,25 @@ public class TransactionService extends Service implements Observer {
                 * connectivity is established.
                 */
                 Timber.v("processTransaction: call beginMmsConnectivity...");
-                int connectivityResult = beginMmsConnectivity();
-                if (connectivityResult == 1) {
-                    mPending.add(transaction);
-                    Timber.v("processTransaction: connResult=APN_REQUEST_STARTED, " +
-                            "defer transaction pending MMS connectivity");
-                    return true;
-                }
+                beginMmsConnectivity(new ConnectivityManager.NetworkCallback() {
+                    @Override
+                    public void onAvailable(@NonNull Network network) {
+                        super.onAvailable(network);
+                    }
+
+                    @Override
+                    public void onUnavailable() {
+                        super.onUnavailable();
+                        // Set a timer to keep renewing our "lease" on the MMS connection
+                        sendMessageDelayed(obtainMessage(EVENT_CONTINUE_MMS_CONNECTIVITY), APN_EXTENSION_WAIT);
+                    }
+                });
+//                if (connectivityResult == 1) {
+//                    mPending.add(transaction);
+//                    Timber.v("processTransaction: connResult=APN_REQUEST_STARTED, " +
+//                            "defer transaction pending MMS connectivity");
+//                    return true;
+//                }
                 // If there is already a transaction in processing list, because of the previous
                 // beginMmsConnectivity call and there is another transaction just at a time,
                 // when the pdp is connected, there will be a case of adding the new transaction
@@ -822,7 +858,7 @@ public class TransactionService extends Service implements Observer {
             }
 
             // Set a timer to keep renewing our "lease" on the MMS connection
-            sendMessageDelayed(obtainMessage(EVENT_CONTINUE_MMS_CONNECTIVITY), APN_EXTENSION_WAIT);
+            // sendMessageDelayed(obtainMessage(EVENT_CONTINUE_MMS_CONNECTIVITY), APN_EXTENSION_WAIT);
 
             Timber.v("processTransaction: starting transaction " + transaction);
 

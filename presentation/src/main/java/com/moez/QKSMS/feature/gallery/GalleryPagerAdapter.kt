@@ -24,8 +24,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.viewbinding.ViewBinding
 import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.ExoPlayerFactory
-import com.google.android.exoplayer2.source.ExtractorMediaSource
+import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
@@ -111,15 +110,17 @@ class GalleryPagerAdapter @Inject constructor(private val context: Context) : Qk
 
             VIEW_TYPE_VIDEO -> {
                 val binding = holder.binding as GalleryVideoPageBinding
-                val videoTrackSelectionFactory = AdaptiveTrackSelection.Factory(null)
-                val trackSelector = DefaultTrackSelector(videoTrackSelectionFactory)
-                val exoPlayer = ExoPlayerFactory.newSimpleInstance(context, trackSelector)
+
+                val trackSelector = DefaultTrackSelector(context).apply {
+                    setParameters(buildUponParameters().setMaxVideoSizeSd())
+                }
+
+                val exoPlayer = ExoPlayer.Builder(context).setTrackSelector(trackSelector).build()
                 binding.video.player = exoPlayer
                 exoPlayers.add(exoPlayer)
 
-                val dataSourceFactory = DefaultDataSourceFactory(context, Util.getUserAgent(context, "QKSMS"))
-                val videoSource = ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(part.getUri())
-                exoPlayer?.prepare(videoSource)
+                exoPlayer.setMediaItem(MediaItem.fromUri(part.getUri()))
+                exoPlayer.prepare()
             }
         }
     }

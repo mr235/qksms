@@ -54,7 +54,7 @@ import com.moez.QKSMS.injection.appComponent
 import com.moez.QKSMS.repository.SyncRepository
 import com.moez.QKSMS.util.Preferences
 import com.uber.autodispose.android.lifecycle.scope
-import com.uber.autodispose.autoDisposable
+import com.uber.autodispose.autoDispose
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
@@ -97,7 +97,7 @@ class SettingsController : QkController<SettingsView, SettingsState, SettingsPre
         retainViewMode = RetainViewMode.RETAIN_DETACH
 
         colors.themeObservable()
-                .autoDisposable(scope())
+                .autoDispose(scope())
                 .subscribe { activity?.recreate() }
     }
 

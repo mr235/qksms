@@ -47,7 +47,7 @@ import com.moez.QKSMS.repository.ConversationRepository
 import com.moez.QKSMS.repository.SyncRepository
 import com.moez.QKSMS.util.Preferences
 import com.uber.autodispose.android.lifecycle.scope
-import com.uber.autodispose.autoDisposable
+import com.uber.autodispose.autoDispose
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.rxkotlin.withLatestFrom
@@ -145,7 +145,7 @@ class MainViewModel @Inject constructor(
             .map { permissionManager.isDefaultSms() }
             .distinctUntilChanged()
             .doOnNext { defaultSms -> newState { copy(defaultSms = defaultSms) } }
-            .autoDisposable(view.scope())
+            .autoDispose(view.scope())
             .subscribe()
 
         // If the SMS Permission state changes, reflect it in the State
@@ -155,7 +155,7 @@ class MainViewModel @Inject constructor(
             .map { permissionManager.hasReadSms() }
             .distinctUntilChanged()
             .doOnNext { smsPermission -> newState { copy(smsPermission = smsPermission) } }
-            .autoDisposable(view.scope())
+            .autoDispose(view.scope())
             .subscribe()
 
         // If the Contacts Permission state changes, reflect it in the State
@@ -165,7 +165,7 @@ class MainViewModel @Inject constructor(
             .map { permissionManager.hasContacts() }
             .distinctUntilChanged()
             .doOnNext { contactPermission -> newState { copy(contactPermission = contactPermission) } }
-            .autoDisposable(view.scope())
+            .autoDispose(view.scope())
             .subscribe()
 
         // If the Notifications Permission state changes, reflect it in the State
@@ -175,7 +175,7 @@ class MainViewModel @Inject constructor(
             .map { permissionManager.hasNotifications() }
             .distinctUntilChanged()
             .doOnNext { notificationPermission -> newState { copy(notificationPermission = notificationPermission) } }
-            .autoDisposable(view.scope())
+            .autoDispose(view.scope())
             .subscribe()
 
         // If we go from not having all SMS permissions to having them, sync messages
@@ -186,12 +186,12 @@ class MainViewModel @Inject constructor(
             .distinctUntilChanged()
             .skip(1)
             .filter { hasAllPermissions -> hasAllPermissions }
-            .autoDisposable(view.scope())
+            .autoDispose(view.scope())
             .subscribe { syncMessages.execute(Unit) }
 
         // Launch screen from intent
         view.onNewIntentIntent
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { intent ->
                     when (intent.getStringExtra("screen")) {
                         "compose" -> navigator.showConversation(intent.getLongExtra("threadId", 0))
@@ -215,7 +215,7 @@ class MainViewModel @Inject constructor(
         }
 
         view.changelogMoreIntent
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { navigator.showChangelog() }
 
         view.queryChangedIntent
@@ -238,7 +238,7 @@ class MainViewModel @Inject constructor(
                 }
                 .observeOn(Schedulers.io())
                 .map(conversationRepo::searchConversations)
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { data -> newState { copy(page = Searching(loading = false, data = data)) } }
 
         view.activityResumedIntent
@@ -252,11 +252,11 @@ class MainViewModel @Inject constructor(
                             .doOnNext { view.themeChanged() }
                             .takeUntil(view.activityResumedIntent.filter { resumed -> resumed })
                 }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
 
         view.composeIntent
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { navigator.showCompose() }
 
         view.homeIntent
@@ -269,11 +269,11 @@ class MainViewModel @Inject constructor(
                         else -> newState { copy(drawerOpen = true) }
                     }
                 }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
 
         view.drawerOpenIntent
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { open -> newState { copy(drawerOpen = open) } }
 
         view.navigationIntent
@@ -309,7 +309,7 @@ class MainViewModel @Inject constructor(
                         else -> Unit
                     }
                 }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
 
         view.optionsItemIntent
@@ -318,7 +318,7 @@ class MainViewModel @Inject constructor(
                     markArchived.execute(conversations)
                     view.clearSelection()
                 }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
 
         view.optionsItemIntent
@@ -327,7 +327,7 @@ class MainViewModel @Inject constructor(
                     markUnarchived.execute(conversations)
                     view.clearSelection()
                 }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
 
         view.optionsItemIntent
@@ -336,7 +336,7 @@ class MainViewModel @Inject constructor(
                 .withLatestFrom(view.conversationsSelectedIntent) { _, conversations ->
                     view.showDeleteDialog(conversations)
                 }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
 
         view.optionsItemIntent
@@ -349,7 +349,7 @@ class MainViewModel @Inject constructor(
                 .map { conversation -> conversation.recipients }
                 .mapNotNull { recipients -> recipients[0]?.address?.takeIf { recipients.size == 1 } }
                 .doOnNext(navigator::addContact)
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
 
         view.optionsItemIntent
@@ -358,7 +358,7 @@ class MainViewModel @Inject constructor(
                     markPinned.execute(conversations)
                     view.clearSelection()
                 }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
 
         view.optionsItemIntent
@@ -367,7 +367,7 @@ class MainViewModel @Inject constructor(
                     markUnpinned.execute(conversations)
                     view.clearSelection()
                 }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
 
         view.optionsItemIntent
@@ -377,7 +377,7 @@ class MainViewModel @Inject constructor(
                     markRead.execute(conversations)
                     view.clearSelection()
                 }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
 
         view.optionsItemIntent
@@ -387,7 +387,7 @@ class MainViewModel @Inject constructor(
                     markUnread.execute(conversations)
                     view.clearSelection()
                 }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
 
         view.optionsItemIntent
@@ -396,25 +396,25 @@ class MainViewModel @Inject constructor(
                     view.showBlockingDialog(conversations, true)
                     view.clearSelection()
                 }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
 
         view.plusBannerIntent
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe {
                     newState { copy(drawerOpen = false) }
                     navigator.showQksmsPlusActivity("main_banner")
                 }
 
         view.rateIntent
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe {
                     navigator.showRating()
                     ratingManager.rate()
                 }
 
         view.dismissRatingIntent
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { ratingManager.dismiss() }
 
         view.conversationsSelectedIntent
@@ -443,19 +443,19 @@ class MainViewModel @Inject constructor(
                         is Searching -> {} // Ignore
                     }
                 }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
 
         // Delete the conversation
         view.confirmDeleteIntent
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { conversations ->
                     deleteConversations.execute(conversations)
                     view.clearSelection()
                 }
 
         view.swipeConversationIntent
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { (threadId, direction) ->
                     val action = if (direction == ItemTouchHelper.RIGHT) prefs.swipeRight.get() else prefs.swipeLeft.get()
                     when (action) {
@@ -470,7 +470,7 @@ class MainViewModel @Inject constructor(
 
         view.undoArchiveIntent
                 .withLatestFrom(view.swipeConversationIntent) { _, pair -> pair.first }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { threadId -> markUnarchived.execute(listOf(threadId)) }
 
         view.snackbarButtonIntent
@@ -489,7 +489,7 @@ class MainViewModel @Inject constructor(
                         }
                     }
                 }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
     }
 

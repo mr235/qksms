@@ -37,7 +37,7 @@ import com.moez.QKSMS.common.widget.PreferenceView
 import com.moez.QKSMS.common.widget.QkSwitch
 import com.moez.QKSMS.databinding.NotificationPrefsActivityBinding
 import com.uber.autodispose.android.lifecycle.scope
-import com.uber.autodispose.autoDisposable
+import com.uber.autodispose.autoDispose
 import dagger.android.AndroidInjection
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
@@ -89,7 +89,7 @@ class NotificationPrefsActivity : QkThemedActivity(), NotificationPrefsView {
                 .mapNotNull { view -> view as? PreferenceView }
                 .map { preference -> preference.clicks().map { preference } }
                 .let { Observable.merge(it) }
-                .autoDisposable(scope())
+                .autoDispose(scope())
                 .subscribe(preferenceClickIntent)
     }
 

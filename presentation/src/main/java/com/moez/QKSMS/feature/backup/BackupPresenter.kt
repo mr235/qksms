@@ -19,7 +19,6 @@
 package com.moez.QKSMS.feature.backup
 
 import android.content.Context
-import androidx.core.net.toUri
 import com.moez.QKSMS.R
 import com.moez.QKSMS.common.Navigator
 import com.moez.QKSMS.common.base.QkPresenter
@@ -29,12 +28,10 @@ import com.moez.QKSMS.interactor.PerformBackup
 import com.moez.QKSMS.manager.BillingManager
 import com.moez.QKSMS.repository.BackupRepository
 import com.uber.autodispose.android.lifecycle.scope
-import com.uber.autodispose.autoDisposable
+import com.uber.autodispose.autoDispose
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.plusAssign
-import io.reactivex.rxkotlin.withLatestFrom
 import io.reactivex.schedulers.Schedulers
-import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -67,7 +64,7 @@ class BackupPresenter @Inject constructor(
 
         view.setBackupLocationClicks()
                 .observeOn(AndroidSchedulers.mainThread())
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { view.selectFolder(backupRepo.getBackupPathUriForPicker()) }
 
         view.restoreClicks()
@@ -83,12 +80,12 @@ class BackupPresenter @Inject constructor(
                         else -> view.selectFile(backupRepo.getBackupPathUriForPicker())
                     }
                 }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
 
         view.backupClicks()
                 .withLatestFrom(billingManager.upgradeStatus) { _, upgraded -> upgraded }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { upgraded ->
                     when {
                         backupRepo.getBackupDocumentTree() == null -> {
@@ -101,49 +98,49 @@ class BackupPresenter @Inject constructor(
 
         view.locationRationaleConfirmClicks()
                 .doOnNext { newState { copy(showLocationRationale = false) } }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { view.selectFolder(backupRepo.getBackupPathUriForPicker()) }
 
         view.locationRationaleCancelClicks()
                 .doOnNext { newState { copy(showLocationRationale = false) } }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
 
         view.selectedBackupErrorClicks()
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { newState { copy(showSelectedBackupError = false) } }
 
         view.confirmRestoreBackupConfirmClicks()
                 .doOnNext { newState { copy(selectedBackupDetails = null) } }
                 .withLatestFrom(view.documentSelected()) { _, backup -> backup }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { backup -> RestoreBackupService.start(context, backup) }
 
         view.confirmRestoreBackupCancelClicks()
                 .doOnNext { newState { copy(selectedBackupDetails = null) } }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe()
 
         view.stopRestoreClicks()
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { newState { copy(showStopRestoreDialog = true) } }
 
         view.stopRestoreConfirmed()
                 .doOnNext { newState { copy(showStopRestoreDialog = false) } }
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { backupRepo.stopRestore() }
 
         view.stopRestoreCancel()
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { newState { copy(showStopRestoreDialog = false) } }
 
         view.documentTreeSelected()
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { uri -> backupRepo.persistBackupDirectory(uri) }
 
         view.documentSelected()
                 .observeOn(Schedulers.io())
-                .autoDisposable(view.scope())
+                .autoDispose(view.scope())
                 .subscribe { uri ->
                     try {
                         val backupFile = backupRepo.parseBackup(uri)

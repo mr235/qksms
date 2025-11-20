@@ -61,7 +61,7 @@ import com.moez.QKSMS.feature.contacts.ContactsActivity
 import com.moez.QKSMS.model.Attachment
 import com.moez.QKSMS.model.Recipient
 import com.uber.autodispose.android.lifecycle.scope
-import com.uber.autodispose.autoDisposable
+import com.uber.autodispose.autoDispose
 import dagger.android.AndroidInjection
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
@@ -153,7 +153,7 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
                 .doOnNext { binding.attach.setBackgroundTint(it.theme) }
                 .doOnNext { binding.attach.setTint(it.textPrimary) }
                 .doOnNext { messageAdapter.theme = it }
-                .autoDisposable(scope())
+                .autoDispose(scope())
                 .subscribe()
 
         window.callback = ComposeWindowCallback(window.callback, this)

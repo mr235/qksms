@@ -5,7 +5,7 @@ import com.moez.QKSMS.common.base.QkPresenter
 import com.moez.QKSMS.common.util.extensions.makeToast
 import com.moez.QKSMS.repository.BlockingRepository
 import com.uber.autodispose.android.lifecycle.scope
-import com.uber.autodispose.autoDisposable
+import com.uber.autodispose.autoDispose
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
@@ -20,12 +20,12 @@ class BlockedMessagesNotificationPresenter @Inject constructor(
         super.bindIntents(view)
 
         view.addBlockedMessageNotification()
-            .autoDisposable(view.scope())
+            .autoDispose(view.scope())
             .subscribe { view.showAddDialog() }
 
         view.saveMessage()
             .subscribeOn(Schedulers.io())
-            .autoDisposable(view.scope())
+            .autoDispose(view.scope())
             .subscribe {
                 if (it.trim().isNotEmpty()) {
                     blockingRepo.blockMessageNotification(it.trim())
@@ -35,7 +35,7 @@ class BlockedMessagesNotificationPresenter @Inject constructor(
             }
 
         view.unblockMessageNotification()
-            .autoDisposable(view.scope())
+            .autoDispose(view.scope())
             .subscribe { blockingRepo.unblockMessageNotification(it) }
 
     }

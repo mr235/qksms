@@ -38,10 +38,10 @@ abstract class QkPresenter<View : QkViewContract<State>, State>(initialState: St
     init {
         // If we accidentally push a realm object into the state on the wrong thread, switching
         // to mainThread right here should immediately alert us of the issue
-        disposables += stateReducer
-                .observeOn(AndroidSchedulers.mainThread())
-                .scan(initialState) { state, reducer -> reducer(state) }
-                .subscribe(state::onNext)
+//        disposables += stateReducer
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .scan(initialState) { state, reducer -> reducer(state) }
+//                .subscribe(state::onNext)
     }
 
     @CallSuper

@@ -209,7 +209,10 @@ class ComposeViewModel @Inject constructor(
 
         disposables += Observables.combineLatest(searchSelection, searchResults) { selected, messages ->
             if (selected == -1L) {
-                messages.lastOrNull()?.let { message -> searchSelection.onNext(message.id) }
+                val lastMessage = messages.lastOrNull()
+                if (lastMessage != null) {
+                    searchSelection.onNext(lastMessage.id)
+                }
             } else {
                 val position = messages.indexOfFirst { it.id == selected } + 1
                 newState { copy(searchSelectionPosition = position, searchResults = messages.size) }
@@ -354,7 +357,8 @@ class ComposeViewModel @Inject constructor(
         view.optionsItemIntent
                 .filter { it == R.id.forward }
                 .withLatestFrom(view.messagesSelectedIntent) { _, messages ->
-                    messages?.firstOrNull()?.let { messageRepo.getMessage(it) }?.let { message ->
+                    val message = messages.firstOrNull()?.let { messageRepo.getMessage(it) }
+                    if (message != null) {
                         val images = message.parts.filter { it.isImage() }.mapNotNull { it.getUri() }
                         navigator.showCompose(message.getText(), images)
                     }

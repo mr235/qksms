@@ -32,6 +32,9 @@ android {
 
         buildConfigField "String", "AMPLITUDE_API_KEY", "\"${System.getenv("AMPLITUDE_API_KEY")}\""
     }
+    buildFeatures {
+        buildConfig = true
+    }
 
     productFlavors {
         withAnalytics { dimension "analytics" }

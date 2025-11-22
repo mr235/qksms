@@ -42,6 +42,14 @@ abstract class QkPresenter<View : QkViewContract<State>, State>(initialState: St
 //                .observeOn(AndroidSchedulers.mainThread())
 //                .scan(initialState) { state, reducer -> reducer(state) }
 //                .subscribe(state::onNext)
+        disposables += stateReducer
+            .observeOn(AndroidSchedulers.mainThread())
+            .scan(initialState) { state: State, reducer ->
+                state.reducer()!!
+            }
+            .subscribe{
+                it?.let { t -> state.onNext(t) }
+            }
     }
 
     @CallSuper

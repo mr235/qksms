@@ -43,6 +43,14 @@ abstract class QkViewModel<in View : QkView<State>, State>(initialState: State) 
 //                .observeOn(AndroidSchedulers.mainThread())
 //                .scan(initialState) { state, reducer -> reducer(state) }
 //                .subscribe(state::onNext)
+        disposables += stateReducer
+            .observeOn(AndroidSchedulers.mainThread())
+            .scan(initialState) { state, reducer ->
+                state.reducer()!!
+            }
+            .subscribe{
+                it?.let { t -> state.onNext(t) }
+            }
     }
 
     @CallSuper

@@ -42,6 +42,7 @@ import com.moez.QKSMS.feature.compose.editing.ComposeItem
 import com.moez.QKSMS.feature.compose.editing.ComposeItemAdapter
 import com.moez.QKSMS.feature.compose.editing.PhoneNumberAction
 import com.moez.QKSMS.feature.compose.editing.PhoneNumberPickerAdapter
+import com.uber.autodispose.android.autoDispose
 import dagger.android.AndroidInjection
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
@@ -90,7 +91,7 @@ class ContactsActivity : QkThemedActivity(), ContactsContract {
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.contacts_activity)
+        setContentView(binding.root)
         showBackButton(true)
         viewModel.bindView(this)
 
@@ -104,6 +105,13 @@ class ContactsActivity : QkThemedActivity(), ContactsContract {
 
         if (state.selectedContact != null && !phoneNumberDialog.isShowing) {
             phoneNumberAdapter.data = state.selectedContact.numbers
+            phoneNumberAdapter.selectedItemChanges
+                .skip(1)
+                .distinctUntilChanged()
+                .autoDispose(binding.root)
+                .subscribe{
+                    phoneNumberActionIntent.onNext(PhoneNumberAction.JUST_ONCE)
+                }
             phoneNumberDialog.subtitle = state.selectedContact.name
             phoneNumberDialog.show()
         } else if (state.selectedContact == null && phoneNumberDialog.isShowing) {

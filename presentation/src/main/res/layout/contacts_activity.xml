@@ -46,7 +46,6 @@
         android:id="@+id/toolbar"
         style="@style/Toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         app:contentInsetStartWithNavigation="0dp"
         app:layout_constrainedHeight="true"
         app:layout_constraintTop_toTopOf="parent">

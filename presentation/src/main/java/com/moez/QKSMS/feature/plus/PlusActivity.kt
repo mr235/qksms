@@ -73,7 +73,7 @@ class PlusActivity : QkThemedActivity(), PlusView {
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.qksms_plus_activity)
+        setContentView(binding.root)
         setTitle(R.string.title_qksms_plus)
         showBackButton(true)
         viewModel.bindView(this)

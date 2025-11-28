@@ -20,6 +20,7 @@ package com.moez.QKSMS.feature.contacts
 
 import android.view.inputmethod.EditorInfo
 import com.moez.QKSMS.common.base.QkViewModel
+import com.moez.QKSMS.common.util.PinyinUtil
 import com.moez.QKSMS.extensions.mapNotNull
 import com.moez.QKSMS.extensions.removeAccents
 import com.moez.QKSMS.feature.compose.editing.ComposeItem
@@ -40,7 +41,6 @@ import com.uber.autodispose.autoDispose
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.Observables
-import io.reactivex.rxkotlin.withLatestFrom
 import io.reactivex.schedulers.Schedulers
 import io.realm.RealmList
 import kotlinx.coroutines.runBlocking
@@ -100,6 +100,37 @@ class ContactsViewModel @Inject constructor(
                         view.queryChangedIntent, recents, starredContacts, contactGroups, contacts, selectedChips
                 ) { query, recents, starredContacts, contactGroups, contacts, selectedChips ->
                     val composeItems = mutableListOf<ComposeItem>()
+
+
+                    val contactComparator = compareBy<Contact>(
+                        {
+                            if (it.namePinyin == null) {
+                                it.namePinyin = PinyinUtil.getFullPinyin(it.name)
+                            }
+                            if (it.namePinyin?.first()?.isDigit() == true) 1 else 0
+                        },
+                        {
+                            if (it.namePinyin == null) {
+                                it.namePinyin = PinyinUtil.getFullPinyin(it.name)
+                            }
+                            it.namePinyin
+                        })
+
+                    val contactGroupComparator = compareBy<ContactGroup>(
+                        {
+                            val contact = it.contacts.firstOrNull()
+                            if (contact != null && contact.namePinyin == null) {
+                                contact.namePinyin = PinyinUtil.getFullPinyin(contact.name)
+                            }
+                            if (contact?.namePinyin?.first()?.isDigit() == true) 1 else 0
+                        },
+                        {
+                            val contact = it.contacts.firstOrNull()
+                            if (contact != null && contact.namePinyin == null) {
+                                contact.namePinyin = PinyinUtil.getFullPinyin(contact.name)
+                            }
+                            contact?.namePinyin
+                        })
                     if (query.isBlank()) {
                         composeItems += recents
                                 .filter { conversation ->
@@ -117,6 +148,7 @@ class ContactsViewModel @Inject constructor(
 
                         composeItems += starredContacts
                                 .filter { contact -> selectedChips.none { it.contact?.lookupKey == contact.lookupKey } }
+                                .sortedWith(contactComparator)
                                 .map(ComposeItem::Starred)
 
                         composeItems += contactGroups
@@ -125,10 +157,12 @@ class ContactsViewModel @Inject constructor(
                                         selectedChips.none { chip -> chip.contact?.lookupKey == contact.lookupKey }
                                     }
                                 }
+                                .sortedWith(contactGroupComparator)
                                 .map(ComposeItem::Group)
 
                         composeItems += contacts
                                 .filter { contact -> selectedChips.none { it.contact?.lookupKey == contact.lookupKey } }
+                                .sortedWith(contactComparator)
                                 .map(ComposeItem::Person)
                     } else {
                         // If the entry is a valid destination, allow it as a recipient
@@ -145,6 +179,7 @@ class ContactsViewModel @Inject constructor(
                                 .asSequence()
                                 .filter { contact -> selectedChips.none { it.contact?.lookupKey == contact.lookupKey } }
                                 .filter { contact -> contactFilter.filter(contact, normalizedQuery) }
+                                .sortedWith(contactComparator)
                                 .map(ComposeItem::Starred)
 
                         composeItems += contactGroups
@@ -155,12 +190,14 @@ class ContactsViewModel @Inject constructor(
                                     }
                                 }
                                 .filter { group -> contactGroupFilter.filter(group, normalizedQuery) }
+                                .sortedWith(contactGroupComparator)
                                 .map(ComposeItem::Group)
 
                         composeItems += contacts
                                 .asSequence()
                                 .filter { contact -> selectedChips.none { it.contact?.lookupKey == contact.lookupKey } }
                                 .filter { contact -> contactFilter.filter(contact, normalizedQuery) }
+                                .sortedWith(contactComparator)
                                 .map(ComposeItem::Person)
                     }
 

@@ -196,7 +196,7 @@ class MainActivity : QkThemedActivity(), MainView {
 
     override fun render(state: MainState) {
         if (state.hasError) {
-            finish()
+            moveTaskToBack(true)
             return
         }
 

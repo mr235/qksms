@@ -1,6 +1,5 @@
 package com.moez.QKSMS.feature.blocking.notification
 
-import androidx.lifecycle.Lifecycle
 import com.moez.QKSMS.common.base.QkViewContract
 import io.reactivex.Observable
 

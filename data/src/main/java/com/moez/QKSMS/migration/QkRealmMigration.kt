@@ -241,7 +241,6 @@ class QkRealmMigration @Inject constructor(
 
             version++
         }
-        println("version: $version -> newVersion $newVersion")
 
         check(version >= newVersion) { "Migration missing from v$oldVersion to v$newVersion" }
     }

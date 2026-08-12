@@ -42,7 +42,7 @@ class BlockingRepositoryImpl @Inject constructor(
             val maxId = realm.where(BlockedNumber::class.java)
                     .max("id")?.toLong() ?: -1
 
-            realm.executeTransactionAsync { r ->
+            realm.executeTransaction { r ->
                 r.insert(newAddresses.mapIndexed { index, address ->
                     BlockedNumber(maxId + 1 + index, address)
                 })
@@ -62,6 +62,14 @@ class BlockingRepositoryImpl @Inject constructor(
             .findAllAsync()
     }
 
+    override fun getBlockedNotificationContents(): List<String> {
+        return Realm.getDefaultInstance().use { realm ->
+            realm.where(BlockedMessageNotification::class.java)
+                .findAll()
+                .map { it.content }
+        }
+    }
+
     override fun blockMessageNotification(vararg contents: String) {
         Realm.getDefaultInstance().use { realm ->
             realm.refresh()
@@ -74,7 +82,7 @@ class BlockingRepositoryImpl @Inject constructor(
             val maxId = realm.where(BlockedMessageNotification::class.java)
                 .max("id")?.toLong() ?: -1
 
-            realm.executeTransactionAsync { r ->
+            realm.executeTransaction { r ->
                 r.insert(newMessages.mapIndexed { index, content ->
                     BlockedMessageNotification(maxId + 1 + index, content)
                 })
@@ -84,7 +92,7 @@ class BlockingRepositoryImpl @Inject constructor(
 
     override fun unblockMessageNotification(id: Long) {
         Realm.getDefaultInstance().use { realm ->
-            realm.executeTransactionAsync { r ->
+            realm.executeTransaction { r ->
                 r.where(BlockedMessageNotification::class.java)
                     .equalTo("id", id)
                     .findAll()
@@ -110,7 +118,7 @@ class BlockingRepositoryImpl @Inject constructor(
 
     override fun unblockNumber(id: Long) {
         Realm.getDefaultInstance().use { realm ->
-            realm.executeTransactionAsync { r ->
+            realm.executeTransaction { r ->
                 r.where(BlockedNumber::class.java)
                         .equalTo("id", id)
                         .findAll()
@@ -129,7 +137,7 @@ class BlockingRepositoryImpl @Inject constructor(
                     .map { number -> number.id }
                     .toLongArray()
 
-            realm.executeTransactionAsync { r ->
+            realm.executeTransaction { r ->
                 r.where(BlockedNumber::class.java)
                         .anyOf("id", ids)
                         .findAll()

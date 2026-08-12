@@ -30,6 +30,8 @@ interface BlockingRepository {
 
     fun getBlockedMessagesNotification(): RealmResults<BlockedMessageNotification>
 
+    fun getBlockedNotificationContents(): List<String>
+
     fun blockMessageNotification(vararg contents: String)
 
     fun unblockMessageNotification(id: Long)

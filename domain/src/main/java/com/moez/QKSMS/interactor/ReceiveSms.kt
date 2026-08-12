@@ -23,18 +23,18 @@ import com.moez.QKSMS.blocking.BlockingClient
 import com.moez.QKSMS.extensions.mapNotNull
 import com.moez.QKSMS.manager.NotificationManager
 import com.moez.QKSMS.manager.ShortcutManager
-import com.moez.QKSMS.model.BlockedMessageNotification
+import com.moez.QKSMS.repository.BlockingRepository
 import com.moez.QKSMS.repository.ConversationRepository
 import com.moez.QKSMS.repository.MessageRepository
 import com.moez.QKSMS.util.Preferences
 import io.reactivex.Flowable
-import io.realm.Realm
 import timber.log.Timber
 import javax.inject.Inject
 
 class ReceiveSms @Inject constructor(
     private val conversationRepo: ConversationRepository,
     private val blockingClient: BlockingClient,
+    private val blockingRepo: BlockingRepository,
     private val prefs: Preferences,
     private val messageRepo: MessageRepository,
     private val notificationManager: NotificationManager,
@@ -93,17 +93,14 @@ class ReceiveSms @Inject constructor(
                 }
                 .filter {
                     conversation ->
-                    val blockedMessages = Realm.getDefaultInstance()
-                        .where(BlockedMessageNotification::class.java)
-                        .findAll()
-                    !conversation.blocked
+                    val blockedContents = blockingRepo.getBlockedNotificationContents()
                     var blockedPattern = "退订|退定|退TD|度小满"
-                    if (blockedMessages.isNotEmpty()) {
-                        blockedPattern += "|${blockedMessages.joinToString("|") { it.content }}"
+                    if (blockedContents.isNotEmpty()) {
+                        blockedPattern += "|${blockedContents.joinToString("|")}"
                     }
-                    conversation.snippet != null && !conversation.snippet!!.contains(Regex(
-                        blockedPattern
-                    ))
+                    !conversation.blocked &&
+                            conversation.snippet != null &&
+                            !conversation.snippet!!.contains(Regex(blockedPattern))
                 } // Don't notify for blocked conversations
                 .doOnNext { conversation ->
                     // Unarchive conversation if necessary

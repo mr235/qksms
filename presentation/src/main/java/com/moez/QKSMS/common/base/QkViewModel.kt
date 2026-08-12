@@ -29,7 +29,7 @@ import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 
-abstract class QkViewModel<in View : QkView<State>, State>(initialState: State) : ViewModel() {
+abstract class QkViewModel<in View : QkView<State>, State : Any>(initialState: State) : ViewModel() {
 
     protected val disposables = CompositeDisposable()
     protected val state: Subject<State> = BehaviorSubject.createDefault(initialState)
@@ -39,18 +39,10 @@ abstract class QkViewModel<in View : QkView<State>, State>(initialState: State) 
     init {
         // If we accidentally push a realm object into the state on the wrong thread, switching
         // to mainThread right here should immediately alert us of the issue
-//        disposables += stateReducer
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .scan(initialState) { state, reducer -> reducer(state) }
-//                .subscribe(state::onNext)
         disposables += stateReducer
-            .observeOn(AndroidSchedulers.mainThread())
-            .scan(initialState) { state, reducer ->
-                state.reducer()!!
-            }
-            .subscribe{
-                it?.let { t -> state.onNext(t) }
-            }
+                .observeOn(AndroidSchedulers.mainThread())
+                .scan(initialState) { state: State, reducer -> reducer(state) }
+                .subscribe(state::onNext)
     }
 
     @CallSuper

@@ -195,11 +195,6 @@ class MainActivity : QkThemedActivity(), MainView {
     }
 
     override fun render(state: MainState) {
-        if (state.hasError) {
-            moveTaskToBack(true)
-            return
-        }
-
         val addContact = when (state.page) {
             is Inbox -> state.page.addContact
             is Archived -> state.page.addContact
@@ -410,6 +405,10 @@ class MainActivity : QkThemedActivity(), MainView {
             setActionTextColor(colors.theme().theme)
             show()
         }
+    }
+
+    override fun moveToBack() {
+        moveTaskToBack(true)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

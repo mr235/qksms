@@ -24,7 +24,6 @@ import com.moez.QKSMS.repository.SyncRepository
 import io.realm.RealmResults
 
 data class MainState(
-    val hasError: Boolean = false,
     val page: MainPage = Inbox(),
     val drawerOpen: Boolean = false,
     val upgraded: Boolean = true,

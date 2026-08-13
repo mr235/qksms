@@ -288,7 +288,7 @@ class MainViewModel @Inject constructor(
                             state.page !is Inbox -> {
                                 newState { copy(page = Inbox(data = conversationRepo.getConversations())) }
                             }
-                            else -> newState { copy(hasError = true) }
+                            else -> view.moveToBack()
                         }
                         NavItem.BACKUP -> navigator.showBackup()
                         NavItem.SCHEDULED -> navigator.showScheduled()

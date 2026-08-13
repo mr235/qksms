@@ -52,6 +52,7 @@ import javax.inject.Singleton
 @Component(modules = [
     AndroidSupportInjectionModule::class,
     AppModule::class,
+    ViewModelModule::class,
     ActivityBuilderModule::class,
     BroadcastReceiverBuilderModule::class,
     ServiceBuilderModule::class])

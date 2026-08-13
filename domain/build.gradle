@@ -20,6 +20,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'realm-android' // Realm needs to be before Kotlin or the build will fail
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'com.google.devtools.ksp'
 
 android {
     compileSdkVersion 36
@@ -42,7 +43,7 @@ dependencies {
 
     // dagger
     implementation "com.google.dagger:dagger:$dagger_version"
-    kapt "com.google.dagger:dagger-compiler:$dagger_version"
+    ksp "com.google.dagger:dagger-compiler:$dagger_version"
     compileOnly "javax.annotation:jsr250-api:1.0"
 
     // realm

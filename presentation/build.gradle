@@ -20,6 +20,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'realm-android' // Realm needs to be before Kotlin or the build will fail
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'com.google.devtools.ksp'
 
 def appVersionName = "3.10.1"
 
@@ -135,8 +136,8 @@ dependencies {
     // dagger
     implementation "com.google.dagger:dagger:$dagger_version"
     implementation "com.google.dagger:dagger-android-support:$dagger_version"
-    kapt "com.google.dagger:dagger-compiler:$dagger_version"
-    kapt "com.google.dagger:dagger-android-processor:$dagger_version"
+    ksp "com.google.dagger:dagger-compiler:$dagger_version"
+    ksp "com.google.dagger:dagger-android-processor:$dagger_version"
     compileOnly "javax.annotation:jsr250-api:1.0"
 
     // ezvcard

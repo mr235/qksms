@@ -13,12 +13,13 @@ buildscript {
     ext.billing_version = '5.1.0'
     ext.conductor_version = '3.2.0'
     ext.coroutines_version = '1.10.2'
-    ext.dagger_version = "2.16"
+    ext.dagger_version = "2.60.1"
     ext.espresso_version = '3.1.0-alpha3'
     ext.exoplayer_version = "2.19.1"
     ext.glide_version = "4.16.0"
     ext.junit_version = '4.13.2'
     ext.kotlin_version = '2.2.10'
+    ext.ksp_version = '2.2.10-2.0.2'
     ext.lifecycle_version = '2.2.0'
     ext.material_version = '1.13.0'
     ext.mockito_version = '5.20.0'
@@ -53,6 +54,7 @@ buildscript {
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.5.2'
         classpath 'com.google.gms:google-services:4.3.14'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:$ksp_version"
         classpath "io.realm:realm-gradle-plugin:$realm_version"
     }
 }

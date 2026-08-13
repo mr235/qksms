@@ -26,9 +26,14 @@ android {
 
     defaultConfig {
         minSdkVersion 23
-        targetSdkVersion 33
     }
     namespace 'com.moez.QKSMS.domain'
+    lint {
+        targetSdk 33
+    }
+    testOptions {
+        targetSdk 33
+    }
 }
 
 dependencies {

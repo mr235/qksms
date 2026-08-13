@@ -24,11 +24,16 @@ android {
 
     defaultConfig {
         minSdkVersion 23
-        targetSdkVersion 33
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
     }
     namespace 'com.moez.QKSMS.common'
+    lint {
+        targetSdk 33
+    }
+    testOptions {
+        targetSdk 33
+    }
 }
 
 dependencies {

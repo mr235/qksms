@@ -24,15 +24,18 @@ android {
 
     defaultConfig {
         minSdkVersion 23
-        targetSdkVersion 33
     }
 
 
     useLibrary 'org.apache.http.legacy'
     lint {
         abortOnError false
+        targetSdk 33
     }
     namespace 'com.klinker.android.send_message'
+    testOptions {
+        targetSdk 33
+    }
 }
 
 dependencies {

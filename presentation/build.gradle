@@ -21,6 +21,8 @@ apply plugin: 'realm-android' // Realm needs to be before Kotlin or the build wi
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
+def appVersionName = "3.10.1"
+
 android {
     compileSdkVersion 36
     flavorDimensions "analytics"
@@ -28,13 +30,10 @@ android {
     defaultConfig {
         applicationId "com.moez.QKSMS"
         minSdkVersion 23
-        targetSdkVersion 33
+        targetSdk 33
         versionCode 2220
-        versionName "3.10.1"
-        setProperty("archivesBaseName", "QKSMS-v${versionName}")
+        versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-
-        setProperty("archivesBaseName", "QKSMS-v${versionName}")
     }
 
     signingConfigs {
@@ -56,7 +55,7 @@ android {
         release {
             minifyEnabled true
             shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
     }
@@ -82,6 +81,10 @@ android {
         signingConfigs.release.keyAlias = System.getenv("key_alias")
         signingConfigs.release.keyPassword = System.getenv("key_password")
     }
+}
+
+base {
+    archivesName = "QKSMS-v${appVersionName}"
 }
 
 configurations {

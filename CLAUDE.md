@@ -33,7 +33,9 @@ Tests are **instrumented** tests (`src/androidTest`, require a device/emulator) 
   -Pandroid.testInstrumentationRunnerArguments.class=com.moez.QKSMS.repository.MessageRepositoryTest
 ```
 
-Build environment: JDK 17, Kotlin 2.2.0, AGP 8.13.1, compileSdk 36, minSdk 23, targetSdk 33. Maven repos are routed through Aliyun mirrors (see root `build.gradle`).
+Build environment: JDK 21, Kotlin 2.2.10, AGP 9.3.0, Gradle 9.5.0, compileSdk 36, minSdk 23, targetSdk 33. Maven repos are routed through Aliyun mirrors (see root `build.gradle`).
+
+> **JDK 21 required.** Although AGP 9's documented floor is JDK 17, the K2 lint analyzer bundled with Kotlin 2.2.10 calls JDK 21 APIs (e.g. `List.removeLast()` from `SequencedCollection`). Building on JDK 17 fails `lintVitalAnalyze*` with `NoSuchMethodError`. Set the Gradle JDK to 21 (Android Studio: Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK).
 
 ## Module structure & dependency direction
 

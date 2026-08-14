@@ -74,7 +74,7 @@ android {
     lint {
         abortOnError false
     }
-    namespace 'com.moez.QKSMS'
+    namespace 'com.moez.qksms'
 
     if (System.getenv("CI") == "true") {
         signingConfigs.release.storeFile = file("../keystore")

@@ -27,7 +27,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
     }
-    namespace 'com.moez.QKSMS.common'
+    namespace 'com.moez.qksms.common'
     lint {
         targetSdk 33
     }

@@ -40,7 +40,7 @@ android {
         withAnalytics { dimension "analytics" }
         noAnalytics { dimension "analytics" }
     }
-    namespace 'com.moez.QKSMS.data'
+    namespace 'com.moez.qksms.data'
     lint {
         targetSdk 33
     }

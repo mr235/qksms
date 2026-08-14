@@ -22,7 +22,7 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.devtools.ksp'
 
 android {
-    compileSdkVersion 36
+    compileSdkVersion 37
     publishNonDefault true
     flavorDimensions "analytics"
 

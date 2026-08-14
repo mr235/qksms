@@ -25,7 +25,7 @@ apply plugin: 'com.google.devtools.ksp'
 def appVersionName = "3.10.1"
 
 android {
-    compileSdkVersion 36
+    compileSdkVersion 37
     flavorDimensions "analytics"
 
     defaultConfig {

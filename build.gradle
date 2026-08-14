@@ -26,7 +26,7 @@ buildscript {
     ext.moshi_version = '1.15.2'
     ext.okhttp3_version = '4.10.0'
     ext.realm_version = '10.19.0'
-    ext.realm_adapters_version = '3.1.0'
+    ext.realm_adapters_version = '4.0.0'
     ext.rxandroid_version = '2.0.1'
     ext.rxdogtag_version = '1.0.2'
     ext.rxbinding_version = '3.1.0'

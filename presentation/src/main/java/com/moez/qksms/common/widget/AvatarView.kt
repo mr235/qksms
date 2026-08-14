@@ -22,6 +22,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
+import com.bumptech.glide.Glide
 import com.moez.qksms.R
 import com.moez.qksms.common.Navigator
 import com.moez.qksms.common.util.Colors
@@ -30,7 +31,6 @@ import com.moez.qksms.common.util.extensions.setTint
 import com.moez.qksms.databinding.AvatarViewBinding
 import com.moez.qksms.injection.appComponent
 import com.moez.qksms.model.Recipient
-import com.moez.qksms.util.GlideApp
 import javax.inject.Inject
 
 class AvatarView @JvmOverloads constructor(
@@ -103,7 +103,7 @@ class AvatarView @JvmOverloads constructor(
 
         binding.photo.setImageDrawable(null)
         photoUri?.let { photoUri ->
-            GlideApp.with(binding.photo)
+            Glide.with(binding.photo)
                     .load(photoUri)
                     .into(binding.photo)
         }

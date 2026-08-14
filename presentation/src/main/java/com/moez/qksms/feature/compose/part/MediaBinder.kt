@@ -19,6 +19,7 @@
 package com.moez.qksms.feature.compose.part
 
 import android.content.Context
+import com.bumptech.glide.Glide
 import com.moez.qksms.R
 import com.moez.qksms.common.base.QkViewHolder
 import com.moez.qksms.common.util.Colors
@@ -29,7 +30,6 @@ import com.moez.qksms.extensions.isImage
 import com.moez.qksms.extensions.isVideo
 import com.moez.qksms.model.Message
 import com.moez.qksms.model.MmsPart
-import com.moez.qksms.util.GlideApp
 import javax.inject.Inject
 
 class MediaBinder @Inject constructor(colors: Colors, private val context: Context) : PartBinder<MmsPreviewListItemBinding>() {
@@ -60,7 +60,7 @@ class MediaBinder @Inject constructor(colors: Colors, private val context: Conte
             else -> BubbleImageView.Style.ONLY
         }
 
-        GlideApp.with(context).load(part.getUri()).fitCenter().into(holder.binding.thumbnail)
+        Glide.with(context).load(part.getUri()).fitCenter().into(holder.binding.thumbnail)
     }
 
 }

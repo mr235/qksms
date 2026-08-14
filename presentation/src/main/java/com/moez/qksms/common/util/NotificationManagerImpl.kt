@@ -34,6 +34,7 @@ import android.provider.ContactsContract
 import androidx.core.app.*
 import androidx.core.content.getSystemService
 import androidx.core.graphics.drawable.IconCompat
+import com.bumptech.glide.Glide
 import com.moez.qksms.R
 import com.moez.qksms.common.util.extensions.dpToPx
 import com.moez.qksms.extensions.isImage
@@ -44,7 +45,6 @@ import com.moez.qksms.mapper.CursorToPartImpl
 import com.moez.qksms.receiver.*
 import com.moez.qksms.repository.ConversationRepository
 import com.moez.qksms.repository.MessageRepository
-import com.moez.qksms.util.GlideApp
 import com.moez.qksms.util.PhoneNumberUtils
 import com.moez.qksms.util.Preferences
 import com.moez.qksms.util.tryOrNull
@@ -157,7 +157,7 @@ class NotificationManagerImpl @Inject constructor(
                 }
 
                 person.setName(recipient?.getDisplayName() ?: message.address)
-                person.setIcon(GlideApp.with(context)
+                person.setIcon(Glide.with(context)
                         .asBitmap()
                         .circleCrop()
                         .load(recipient?.contact?.photoUri)
@@ -182,7 +182,7 @@ class NotificationManagerImpl @Inject constructor(
         val avatar = conversation.recipients.takeIf { it.size == 1 }
                 ?.first()?.contact?.photoUri
                 ?.let { photoUri ->
-                    GlideApp.with(context)
+                    Glide.with(context)
                             .asBitmap()
                             .circleCrop()
                             .load(photoUri)

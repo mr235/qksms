@@ -22,10 +22,10 @@ import android.content.Context
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import com.bumptech.glide.Glide
 import com.moez.qksms.common.base.QkAdapter
 import com.moez.qksms.common.base.QkViewHolder
 import com.moez.qksms.databinding.ScheduledMessageImageListItemBinding
-import com.moez.qksms.util.GlideApp
 import javax.inject.Inject
 
 class ScheduledMessageAttachmentAdapter @Inject constructor(
@@ -43,7 +43,7 @@ class ScheduledMessageAttachmentAdapter @Inject constructor(
     override fun onBindViewHolder(holder: QkViewHolder<ScheduledMessageImageListItemBinding>, position: Int) {
         val attachment = getItem(position)
 
-        GlideApp.with(context).load(attachment).into(holder.binding.thumbnail)
+        Glide.with(context).load(attachment).into(holder.binding.thumbnail)
     }
 
 }

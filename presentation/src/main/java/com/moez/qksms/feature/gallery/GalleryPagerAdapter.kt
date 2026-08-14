@@ -23,6 +23,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.viewbinding.ViewBinding
+import com.bumptech.glide.Glide
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
@@ -35,7 +36,6 @@ import com.moez.qksms.databinding.GalleryVideoPageBinding
 import com.moez.qksms.extensions.isImage
 import com.moez.qksms.extensions.isVideo
 import com.moez.qksms.model.MmsPart
-import com.moez.qksms.util.GlideApp
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import java.util.*
@@ -93,12 +93,12 @@ class GalleryPagerAdapter @Inject constructor(private val context: Context) : Qk
                 val binding = holder.binding as GalleryImagePageBinding
                 // We need to explicitly request a gif from glide for animations to work
                 when (part.getUri().let(contentResolver::getType)) {
-                    ContentType.IMAGE_GIF -> GlideApp.with(context)
+                    ContentType.IMAGE_GIF -> Glide.with(context)
                             .asGif()
                             .load(part.getUri())
                             .into(binding.image)
 
-                    else -> GlideApp.with(context)
+                    else -> Glide.with(context)
                             .asBitmap()
                             .load(part.getUri())
                             .into(binding.image)

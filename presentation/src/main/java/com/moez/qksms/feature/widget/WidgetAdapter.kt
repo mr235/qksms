@@ -28,6 +28,7 @@ import android.widget.RemoteViewsService
 import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
 import androidx.core.text.color
+import com.bumptech.glide.Glide
 import com.moez.qksms.R
 import com.moez.qksms.common.util.Colors
 import com.moez.qksms.common.util.DateFormatter
@@ -38,7 +39,6 @@ import com.moez.qksms.model.Contact
 import com.moez.qksms.model.Conversation
 import com.moez.qksms.model.PhoneNumber
 import com.moez.qksms.repository.ConversationRepository
-import com.moez.qksms.util.GlideApp
 import com.moez.qksms.util.Preferences
 import com.moez.qksms.util.tryOrNull
 import javax.inject.Inject
@@ -131,7 +131,7 @@ class WidgetAdapter(intent: Intent) : RemoteViewsService.RemoteViewsFactory {
         }
 
         remoteViews.setImageViewBitmap(R.id.photo, null)
-        val futureGet = GlideApp.with(context)
+        val futureGet = Glide.with(context)
                 .asBitmap()
                 .load(contact?.photoUri)
                 .submit(48.dpToPx(context), 48.dpToPx(context))

@@ -24,12 +24,12 @@ import android.graphics.drawable.Icon
 import android.service.chooser.ChooserTarget
 import android.service.chooser.ChooserTargetService
 import androidx.core.os.bundleOf
+import com.bumptech.glide.Glide
 import com.moez.qksms.R
 import com.moez.qksms.feature.compose.ComposeActivity
 import com.moez.qksms.injection.appComponent
 import com.moez.qksms.model.Conversation
 import com.moez.qksms.repository.ConversationRepository
-import com.moez.qksms.util.GlideApp
 import com.moez.qksms.util.tryOrNull
 import javax.inject.Inject
 
@@ -52,7 +52,7 @@ class QkChooserTargetService : ChooserTargetService() {
         val icon = when (conversation.recipients.size) {
             1 -> {
                 val photoUri = conversation.recipients.first()?.contact?.photoUri
-                val request = GlideApp.with(this)
+                val request = Glide.with(this)
                         .asBitmap()
                         .circleCrop()
                         .load(photoUri)

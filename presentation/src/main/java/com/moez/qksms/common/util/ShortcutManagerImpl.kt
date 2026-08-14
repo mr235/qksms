@@ -25,12 +25,12 @@ import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.graphics.drawable.Icon
 import android.os.Build
+import com.bumptech.glide.Glide
 import com.moez.qksms.R
 import com.moez.qksms.feature.compose.ComposeActivity
 import com.moez.qksms.model.Conversation
 import com.moez.qksms.repository.ConversationRepository
 import com.moez.qksms.repository.MessageRepository
-import com.moez.qksms.util.GlideApp
 import com.moez.qksms.util.tryOrNull
 import me.leolin.shortcutbadger.ShortcutBadger
 import javax.inject.Inject
@@ -62,7 +62,7 @@ class ShortcutManagerImpl @Inject constructor(
         val icon = when {
             conversation.recipients.size == 1 -> {
                 val address = conversation.recipients.first()!!.address
-                val request = GlideApp.with(context)
+                val request = Glide.with(context)
                         .asBitmap()
                         .circleCrop()
                         .load("tel:$address")

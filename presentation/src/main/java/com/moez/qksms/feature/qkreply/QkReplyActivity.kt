@@ -27,8 +27,8 @@ import android.view.WindowManager
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
-import com.jakewharton.rxbinding2.view.clicks
-import com.jakewharton.rxbinding2.widget.textChanges
+import com.jakewharton.rxbinding3.view.clicks
+import com.jakewharton.rxbinding3.widget.textChanges
 import com.moez.qksms.R
 import com.moez.qksms.common.base.QkThemedActivity
 import com.moez.qksms.common.util.extensions.autoScrollToStart

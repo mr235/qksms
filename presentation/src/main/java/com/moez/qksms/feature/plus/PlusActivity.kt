@@ -26,7 +26,7 @@ import androidx.core.view.children
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.material.appbar.CollapsingToolbarLayout
-import com.jakewharton.rxbinding2.view.clicks
+import com.jakewharton.rxbinding3.view.clicks
 import com.moez.qksms.BuildConfig
 import com.moez.qksms.R
 import com.moez.qksms.common.base.QkThemedActivity

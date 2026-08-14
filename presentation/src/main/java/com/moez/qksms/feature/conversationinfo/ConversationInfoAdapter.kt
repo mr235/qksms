@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.viewbinding.ViewBinding
 import com.bumptech.glide.Glide
-import com.jakewharton.rxbinding2.view.clicks
+import com.jakewharton.rxbinding3.view.clicks
 import com.moez.qksms.R
 import com.moez.qksms.common.base.QkAdapter
 import com.moez.qksms.common.base.QkViewHolder

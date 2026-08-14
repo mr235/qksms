@@ -31,7 +31,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.children
 import androidx.core.view.isVisible
-import com.jakewharton.rxbinding2.view.clicks
+import com.jakewharton.rxbinding3.view.clicks
 import com.moez.qksms.R
 import com.moez.qksms.common.base.QkController
 import com.moez.qksms.common.util.QkActivityResultContracts

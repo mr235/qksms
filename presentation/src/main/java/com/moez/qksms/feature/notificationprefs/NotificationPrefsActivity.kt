@@ -27,7 +27,7 @@ import android.os.Bundle
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
-import com.jakewharton.rxbinding2.view.clicks
+import com.jakewharton.rxbinding3.view.clicks
 import com.moez.qksms.R
 import com.moez.qksms.common.QkDialog
 import com.moez.qksms.common.base.QkThemedActivity

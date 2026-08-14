@@ -30,8 +30,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import com.bluelinelabs.conductor.RouterTransaction
 import com.google.android.material.snackbar.Snackbar
-import com.jakewharton.rxbinding2.view.clicks
-import com.jakewharton.rxbinding2.view.longClicks
+import com.jakewharton.rxbinding3.view.clicks
+import com.jakewharton.rxbinding3.view.longClicks
 import com.moez.qksms.BuildConfig
 import com.moez.qksms.R
 import com.moez.qksms.common.MenuItem

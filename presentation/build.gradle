@@ -122,8 +122,8 @@ dependencies {
     })
 
     // rxbinding
-    implementation "com.jakewharton.rxbinding2:rxbinding-kotlin:$rxbinding_version"
-    implementation "com.jakewharton.rxbinding2:rxbinding-support-v4-kotlin:$rxbinding_version"
+    implementation "com.jakewharton.rxbinding3:rxbinding:$rxbinding_version"
+    implementation "com.jakewharton.rxbinding3:rxbinding-drawerlayout:$rxbinding_version"
 
     // autodispose
     implementation "com.uber.autodispose:autodispose-android-archcomponents:$autodispose_version"

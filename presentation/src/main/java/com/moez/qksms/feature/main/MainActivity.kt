@@ -38,11 +38,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.ItemTouchHelper
 import com.google.android.material.snackbar.Snackbar
-import com.jakewharton.rxbinding2.view.clicks
-import com.jakewharton.rxbinding2.widget.textChanges
+import com.jakewharton.rxbinding3.drawerlayout.drawerOpen
+import com.jakewharton.rxbinding3.view.clicks
+import com.jakewharton.rxbinding3.widget.textChanges
 import com.moez.qksms.R
 import com.moez.qksms.common.Navigator
-import com.moez.qksms.common.androidxcompat.drawerOpen
 import com.moez.qksms.common.base.QkThemedActivity
 import com.moez.qksms.common.util.extensions.autoScrollToStart
 import com.moez.qksms.common.util.extensions.dismissKeyboard

@@ -24,9 +24,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProviders
-import com.jakewharton.rxbinding2.view.clicks
-import com.jakewharton.rxbinding2.widget.editorActions
-import com.jakewharton.rxbinding2.widget.textChanges
+import com.jakewharton.rxbinding3.view.clicks
+import com.jakewharton.rxbinding3.widget.editorActions
+import com.jakewharton.rxbinding3.widget.textChanges
 import com.moez.qksms.R
 import com.moez.qksms.common.ViewModelFactory
 import com.moez.qksms.common.base.QkThemedActivity

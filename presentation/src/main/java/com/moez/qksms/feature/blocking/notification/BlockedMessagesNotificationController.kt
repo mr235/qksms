@@ -8,6 +8,8 @@ import com.jakewharton.rxbinding3.view.clicks
 import com.moez.qksms.R
 import com.moez.qksms.common.base.QkController
 import com.moez.qksms.common.util.Colors
+import com.moez.qksms.common.util.extensions.applyNavBarBottomMargin
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
 import com.moez.qksms.common.util.extensions.setBackgroundTint
 import com.moez.qksms.common.util.extensions.setTint
 import com.moez.qksms.common.widget.QkEditText
@@ -56,6 +58,8 @@ class BlockedMessagesNotificationController :
         binding.add.setTint(colors.theme().textPrimary)
         adapter.emptyView = binding.empty
         binding.messages.adapter = adapter
+        binding.messages.applyNavBarBottomPadding()
+        binding.add.applyNavBarBottomMargin()
     }
 
     override fun render(state: BlockedMessagesNotificationState) {

@@ -27,6 +27,8 @@ import com.moez.qksms.R
 import com.moez.qksms.common.base.QkController
 import com.moez.qksms.common.util.Colors
 import com.moez.qksms.common.util.extensions.setBackgroundTint
+import com.moez.qksms.common.util.extensions.applyNavBarBottomMargin
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
 import com.moez.qksms.common.util.extensions.setTint
 import com.moez.qksms.common.widget.QkEditText
 import com.moez.qksms.databinding.BlockedNumbersControllerBinding
@@ -72,6 +74,8 @@ class BlockedNumbersController : QkController<BlockedNumbersView, BlockedNumbers
         binding.add.setTint(colors.theme().textPrimary)
         adapter.emptyView = binding.empty
         binding.numbers.adapter = adapter
+        binding.numbers.applyNavBarBottomPadding()
+        binding.add.applyNavBarBottomMargin()
     }
 
     override fun render(state: BlockedNumbersState) {

@@ -31,6 +31,7 @@ import com.moez.qksms.BuildConfig
 import com.moez.qksms.R
 import com.moez.qksms.common.base.QkThemedActivity
 import com.moez.qksms.common.util.FontProvider
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
 import com.moez.qksms.common.util.extensions.makeToast
 import com.moez.qksms.common.util.extensions.resolveThemeColor
 import com.moez.qksms.common.util.extensions.setBackgroundTint
@@ -94,6 +95,8 @@ class PlusActivity : QkThemedActivity(), PlusView {
                 .mapNotNull { it as? PreferenceView }
                 .map { it.findViewById<TextView>(R.id.titleView) }
                 .forEach { it.setTypeface(it.typeface, Typeface.BOLD) }
+
+        binding.linearLayout.applyNavBarBottomPadding()
 
         val textPrimary = resolveThemeColor(android.R.attr.textColorPrimary)
         collapsingToolbar.setCollapsedTitleTextColor(textPrimary)

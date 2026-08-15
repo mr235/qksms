@@ -27,10 +27,10 @@ android {
     }
     namespace 'com.moez.qksms.domain'
     lint {
-        targetSdk 33
+        targetSdk 37
     }
     testOptions {
-        targetSdk 33
+        targetSdk 37
     }
 }
 

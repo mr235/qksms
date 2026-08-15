@@ -44,6 +44,9 @@ import com.jakewharton.rxbinding3.widget.textChanges
 import com.moez.qksms.R
 import com.moez.qksms.common.Navigator
 import com.moez.qksms.common.base.QkThemedActivity
+import com.moez.qksms.common.util.extensions.applyNavBarBottomMargin
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
+import com.moez.qksms.common.util.extensions.applySystemBarsVerticalPadding
 import com.moez.qksms.common.util.extensions.autoScrollToStart
 import com.moez.qksms.common.util.extensions.dismissKeyboard
 import com.moez.qksms.common.util.extensions.resolveThemeColor
@@ -154,6 +157,11 @@ class MainActivity : QkThemedActivity(), MainView {
             dismissKeyboard()
             homeIntent.onNext(Unit)
         }
+
+        // Keep the list, the FAB and the drawer contents clear of the navigation bar
+        binding.recyclerView.applyNavBarBottomPadding()
+        binding.compose.applyNavBarBottomMargin()
+        binding.drawer.root.applySystemBarsVerticalPadding()
 
         itemTouchCallback.adapter = conversationsAdapter
         conversationsAdapter.autoScrollToStart(binding.recyclerView)

@@ -30,6 +30,7 @@ import com.jakewharton.rxbinding3.widget.textChanges
 import com.moez.qksms.R
 import com.moez.qksms.common.ViewModelFactory
 import com.moez.qksms.common.base.QkThemedActivity
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
 import com.moez.qksms.common.util.extensions.hideKeyboard
 import com.moez.qksms.common.util.extensions.showKeyboard
 import com.moez.qksms.common.widget.QkDialog
@@ -93,6 +94,7 @@ class ContactsActivity : QkThemedActivity(), ContactsContract {
         viewModel.bindView(this)
 
         binding.contacts.adapter = contactsAdapter
+        binding.contacts.applyNavBarBottomPadding(includeIme = true)
     }
 
     override fun render(state: ContactsState) {

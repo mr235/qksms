@@ -29,7 +29,7 @@ android {
     defaultConfig {
         applicationId "com.moez.QKSMS"
         minSdkVersion 23
-        targetSdk 33
+        targetSdk 37
         versionCode 2220
         versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

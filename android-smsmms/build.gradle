@@ -29,11 +29,11 @@ android {
     useLibrary 'org.apache.http.legacy'
     lint {
         abortOnError false
-        targetSdk 33
+        targetSdk 37
     }
     namespace 'com.klinker.android.send_message'
     testOptions {
-        targetSdk 33
+        targetSdk 37
     }
 }
 

@@ -45,6 +45,7 @@ import com.moez.qksms.R
 import com.moez.qksms.common.Navigator
 import com.moez.qksms.common.base.QkThemedActivity
 import com.moez.qksms.common.util.DateFormatter
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
 import com.moez.qksms.common.util.extensions.autoScrollToStart
 import com.moez.qksms.common.util.extensions.hideKeyboard
 import com.moez.qksms.common.util.extensions.scrapViews
@@ -125,6 +126,11 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
         setContentView(binding.root)
         showBackButton(true)
         viewModel.bindView(this)
+
+        // Keep the input bar clear of the navigation bar and the keyboard — every bottom-anchored
+        // view in this layout is constrained to contentView's bottom edge, so padding it here
+        // shifts the whole input bar up in one place.
+        binding.contentView.applyNavBarBottomPadding(includeIme = true)
 
         binding.contentView.layoutTransition = LayoutTransition().apply {
             disableTransitionType(LayoutTransition.CHANGING)

@@ -35,6 +35,8 @@ import com.jakewharton.rxbinding3.view.clicks
 import com.moez.qksms.R
 import com.moez.qksms.common.base.QkController
 import com.moez.qksms.common.util.QkActivityResultContracts
+import com.moez.qksms.common.util.extensions.applyNavBarBottomMargin
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
 import com.moez.qksms.common.util.extensions.getLabel
 import com.moez.qksms.common.util.extensions.setBackgroundTint
 import com.moez.qksms.common.util.extensions.setNegativeButton
@@ -155,6 +157,10 @@ class BackupController : QkController<BackupView, BackupState, BackupPresenter>(
                 .mapNotNull { it as? PreferenceView }
                 .map { it.findViewById<TextView>(R.id.titleView) }
                 .forEach { it.setTypeface(it.typeface, Typeface.BOLD) }
+
+        // Keep the last preference row and the fab clear of the navigation bar
+        binding.linearLayout.applyNavBarBottomPadding()
+        binding.fab.applyNavBarBottomMargin()
     }
 
     override fun render(state: BackupState) {

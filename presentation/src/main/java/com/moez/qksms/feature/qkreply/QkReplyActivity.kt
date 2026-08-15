@@ -53,6 +53,9 @@ class QkReplyActivity : QkThemedActivity(), QkReplyView {
     private val viewModel by lazy { ViewModelProviders.of(this, viewModelFactory)[QkReplyViewModel::class.java] }
     private lateinit var binding: QkreplyActivityBinding
 
+    // Centered dialog card — the toolbar isn't at the top of the screen, so don't pad it.
+    override val applyToolbarStatusInset: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
         supportRequestWindowFeature(Window.FEATURE_NO_TITLE)

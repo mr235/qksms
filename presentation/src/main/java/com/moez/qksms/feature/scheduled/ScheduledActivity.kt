@@ -28,6 +28,7 @@ import com.moez.qksms.R
 import com.moez.qksms.common.QkDialog
 import com.moez.qksms.common.base.QkThemedActivity
 import com.moez.qksms.common.util.FontProvider
+import com.moez.qksms.common.util.extensions.applyNavBarBottomMargin
 import com.moez.qksms.common.util.extensions.setBackgroundTint
 import com.moez.qksms.common.util.extensions.setTint
 import com.moez.qksms.databinding.ScheduledActivityBinding
@@ -59,6 +60,10 @@ class ScheduledActivity : QkThemedActivity(), ScheduledView {
         setTitle(R.string.scheduled_title)
         showBackButton(true)
         viewModel.bindView(this)
+
+        // The AppBarLayout already fits the status bar; only the bottom needs handling
+        binding.compose.applyNavBarBottomMargin()
+        binding.upgrade.applyNavBarBottomMargin()
 
         if (!prefs.systemFont.get()) {
             fontProvider.getLato { lato ->

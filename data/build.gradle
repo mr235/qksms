@@ -22,7 +22,6 @@ apply plugin: 'com.google.devtools.ksp'
 
 android {
     compileSdkVersion 37
-    publishNonDefault true
     flavorDimensions "analytics"
 
     defaultConfig {

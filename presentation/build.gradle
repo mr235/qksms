@@ -17,8 +17,7 @@
  * along with QKSMS.  If not, see <http://www.gnu.org/licenses/>.
  */
 apply plugin: 'com.android.application'
-apply plugin: 'realm-android' // Realm needs to be before Kotlin or the build will fail
-apply plugin: 'com.android.legacy-kapt'
+apply plugin: 'com.android.legacy-kapt' // moshi-kotlin-codegen still runs through kapt
 apply plugin: 'com.google.devtools.ksp'
 
 def appVersionName = "3.10.1"
@@ -146,11 +145,6 @@ dependencies {
         exclude group: "org.freemarker", module: "freemarker"
         exclude group: "com.fasterxml.jackson.core", module: "jackson-core"
     })
-
-    // realm
-    implementation("io.realm:android-adapters:$realm_adapters_version") { transitive = false }
-    kapt "io.realm:realm-annotations:$realm_version"
-    kapt "io.realm:realm-annotations-processor:$realm_version"
 
     // rxjava
     implementation "io.reactivex.rxjava2:rxandroid:$rxandroid_version"

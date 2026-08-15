@@ -25,8 +25,6 @@ buildscript {
     ext.mockito_version = '5.20.0'
     ext.moshi_version = '1.15.2'
     ext.okhttp3_version = '4.10.0'
-    ext.realm_version = '10.19.0'
-    ext.realm_adapters_version = '4.0.0'
     ext.room_version = '2.7.2'
     ext.rxandroid_version = '2.0.1'
     ext.rxdogtag_version = '1.0.2'
@@ -57,7 +55,6 @@ buildscript {
         classpath 'com.google.gms:google-services:4.3.14'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:$ksp_version"
-        classpath "io.realm:realm-gradle-plugin:$realm_version"
     }
 }
 

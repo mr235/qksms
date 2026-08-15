@@ -23,12 +23,11 @@ import com.moez.qksms.db.entity.ScheduledMessageEntity
 import com.moez.qksms.db.entity.ScheduledMessageRecipientEntity
 import com.moez.qksms.db.relation.ScheduledMessageFull
 import com.moez.qksms.model.ScheduledMessage
-import io.realm.RealmList
 
 /**
  * Entity/Relation ↔ domain-model mappers for [ScheduledMessage].
  *
- * The two `RealmList<String>` fields are split into ordered child tables. [ScheduledMessageFull]
+ * The two `MutableList<String>` fields are split into ordered child tables. [ScheduledMessageFull]
  * already exposes `orderedRecipients()`/`orderedAttachments()` to restore list order.
  */
 
@@ -36,10 +35,10 @@ fun ScheduledMessageFull.toDomain(): ScheduledMessage = ScheduledMessage(
     id = message.id,
     date = message.date,
     subId = message.subId,
-    recipients = RealmList<String>().apply { addAll(orderedRecipients()) },
+    recipients = orderedRecipients().toMutableList(),
     sendAsGroup = message.sendAsGroup,
     body = message.body,
-    attachments = RealmList<String>().apply { addAll(orderedAttachments()) }
+    attachments = orderedAttachments().toMutableList()
 )
 
 fun ScheduledMessage.toEntity(): ScheduledMessageEntity = ScheduledMessageEntity(

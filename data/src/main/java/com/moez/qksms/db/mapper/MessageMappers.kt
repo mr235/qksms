@@ -23,23 +23,15 @@ import com.moez.qksms.db.entity.MmsPartEntity
 import com.moez.qksms.db.relation.MessageWithParts
 import com.moez.qksms.model.Message
 import com.moez.qksms.model.MmsPart
-import io.realm.RealmList
 
 /**
  * Entity/Relation ↔ domain-model mappers for [Message] and [MmsPart].
  *
- * The produced domain objects are *unmanaged* Realm instances — while the Realm implementations
- * still own the app they can be copied into Realm via `realm.copyToRealmOrUpdate`; the Room
- * implementations pass them straight through to the presentation layer. In Phase 5 the domain
- * models become plain data classes and the `RealmList` construction here goes away, but the
- * mapper API stays the same.
- *
- * Note that [MmsPart.messages] is a `@LinkingObjects` reverse link and is intentionally left
- * `null` here — the only two callers that dereference it (`MessageRepositoryImpl` and
- * `GalleryActivity`) are rewritten to look the message up explicitly in the Room path.
+ * The domain models are plain Kotlin classes, so the produced objects are handed straight through
+ * to the presentation layer with no persistence framework attached.
  */
 
-/** Row-level: pure part entity → unmanaged [MmsPart]. */
+/** Row-level: pure part entity → [MmsPart]. */
 fun MmsPartEntity.toDomain(): MmsPart = MmsPart().apply {
     id = this@toDomain.id
     messageId = this@toDomain.messageId
@@ -49,7 +41,7 @@ fun MmsPartEntity.toDomain(): MmsPart = MmsPart().apply {
     text = this@toDomain.text
 }
 
-/** Unmanaged domain [MmsPart] → entity row. */
+/** Domain [MmsPart] → entity row. */
 fun MmsPart.toEntity(): MmsPartEntity = MmsPartEntity(
     id = id,
     messageId = messageId,
@@ -59,7 +51,7 @@ fun MmsPart.toEntity(): MmsPartEntity = MmsPartEntity(
     text = text
 )
 
-/** Pure message entity → unmanaged [Message] with an empty parts list. */
+/** Pure message entity → [Message] with an empty parts list. */
 fun MessageEntity.toDomain(parts: List<MmsPart> = emptyList()): Message = Message().apply {
     id = this@toDomain.id
     threadId = this@toDomain.threadId
@@ -85,16 +77,14 @@ fun MessageEntity.toDomain(parts: List<MmsPart> = emptyList()): Message = Messag
     mmsStatus = this@toDomain.mmsStatus
     subject = this@toDomain.subject
     textContentType = this@toDomain.textContentType
-    // Realm-backed field: wrap the incoming list in a fresh RealmList so this instance can still
-    // be handed to `realm.copyToRealmOrUpdate` under the legacy Realm path.
-    this.parts = RealmList<MmsPart>().apply { addAll(parts) }
+    this.parts = parts.toMutableList()
 }
 
-/** [MessageWithParts] relation → unmanaged [Message] with its parts attached. */
+/** [MessageWithParts] relation → [Message] with its parts attached. */
 fun MessageWithParts.toDomain(): Message =
     message.toDomain(parts.sortedBy { it.seq }.map { it.toDomain() })
 
-/** Unmanaged domain [Message] → entity row (parts are extracted separately, see [partEntities]). */
+/** Domain [Message] → entity row (parts are extracted separately, see [partEntities]). */
 fun Message.toEntity(): MessageEntity = MessageEntity(
     id = id,
     threadId = threadId,
@@ -124,8 +114,8 @@ fun Message.toEntity(): MessageEntity = MessageEntity(
 
 /**
  * Extract the MMS part rows for a domain [Message], stamping each part's `messageId` with the
- * parent id. `MmsPart.messageId` is Realm's `contentId`-backed field so it may or may not match
- * the parent's primary key already — we force the linkage here.
+ * parent id. `MmsPart.messageId` historically carried the content-provider id rather than the
+ * parent's primary key, so we force the linkage here.
  */
 fun Message.partEntities(): List<MmsPartEntity> = parts.map { part ->
     MmsPartEntity(

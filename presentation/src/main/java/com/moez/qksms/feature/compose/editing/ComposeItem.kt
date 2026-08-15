@@ -22,7 +22,6 @@ import com.moez.qksms.model.Contact
 import com.moez.qksms.model.ContactGroup
 import com.moez.qksms.model.Conversation
 import com.moez.qksms.model.PhoneNumber
-import io.realm.RealmList
 
 sealed class ComposeItem {
 
@@ -34,7 +33,7 @@ sealed class ComposeItem {
 
     data class Recent(val value: Conversation) : ComposeItem() {
         override fun getContacts(): List<Contact> = value.recipients.map { recipient ->
-            recipient.contact ?: Contact(numbers = RealmList(PhoneNumber(address = recipient.address)))
+            recipient.contact ?: Contact(numbers = mutableListOf(PhoneNumber(address = recipient.address)))
         }
     }
 

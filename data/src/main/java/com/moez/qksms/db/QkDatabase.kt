@@ -100,11 +100,13 @@ abstract class QkDatabase : RoomDatabase() {
                     QkDatabase::class.java,
                     DATABASE_NAME
                 )
-                    // The app was architected around Realm, which permits cheap synchronous reads
-                    // on the main thread (e.g. QkThemedActivity.theme → getConversation). Room
-                    // forbids that by default. Migrating every such call site to an async API is
-                    // Phase 5 of the Realm→Room migration; until that lands, this keeps Room's
-                    // semantics matching Realm's so the app doesn't crash on every synchronous read.
+                    // The app was originally architected around Realm, which permits cheap
+                    // synchronous reads on the main thread (e.g. QkThemedActivity.theme →
+                    // getConversation). Room forbids that by default. There are 27+ such call
+                    // sites across ~11 files (ComposeViewModel, MainViewModel, etc.) that still
+                    // read synchronously; migrating them to an async API is Phase 5 of the
+                    // Realm→Room migration and is deliberately deferred — until it lands, this
+                    // stays in place so the app doesn't crash on every synchronous read.
                     .allowMainThreadQueries()
                     .build().also { instance = it }
             }

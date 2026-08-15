@@ -26,7 +26,6 @@ import com.moez.qksms.db.relation.RecipientFull
 import com.moez.qksms.model.Contact
 import com.moez.qksms.model.PhoneNumber
 import com.moez.qksms.model.Recipient
-import io.realm.RealmList
 
 /**
  * Entity/Relation ↔ domain-model mappers for [Contact], [PhoneNumber], and [Recipient].
@@ -61,7 +60,7 @@ fun PhoneNumber.toEntity(contactLookupKey: String): PhoneNumberEntity = PhoneNum
 
 fun ContactFull.toDomain(): Contact = Contact(
     lookupKey = contact.lookupKey,
-    numbers = RealmList<PhoneNumber>().apply { addAll(numbers.map { it.toDomain() }) },
+    numbers = numbers.map { it.toDomain() }.toMutableList(),
     name = contact.name,
     photoUri = contact.photoUri,
     starred = contact.starred,
@@ -70,7 +69,7 @@ fun ContactFull.toDomain(): Contact = Contact(
 
 fun ContactEntity.toDomain(numbers: List<PhoneNumber> = emptyList()): Contact = Contact(
     lookupKey = lookupKey,
-    numbers = RealmList<PhoneNumber>().apply { addAll(numbers) },
+    numbers = numbers.toMutableList(),
     name = name,
     photoUri = photoUri,
     starred = starred,

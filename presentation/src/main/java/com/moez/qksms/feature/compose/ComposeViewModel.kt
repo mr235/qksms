@@ -32,7 +32,6 @@ import com.moez.qksms.common.util.MessageDetailsFormatter
 import com.moez.qksms.common.util.extensions.makeToast
 import com.moez.qksms.compat.SubscriptionManagerCompat
 import com.moez.qksms.compat.TelephonyCompat
-import com.moez.qksms.extensions.asObservable
 import com.moez.qksms.extensions.isImage
 import com.moez.qksms.extensions.isVideo
 import com.moez.qksms.extensions.mapNotNull
@@ -452,7 +451,11 @@ class ComposeViewModel @Inject constructor(
                 .combineLatest(
                         view.activityVisibleIntent.distinctUntilChanged(),
                         conversation.mapNotNull { conversation ->
-                            conversation.takeIf { it.isValid }?.id
+                            // Realm used `isValid` here to skip conversations that had been deleted
+                            // out from under the managed object. Room hands us detached copies, so
+                            // the equivalent guard is the placeholder `Conversation(0)` emitted
+                            // above while a thread is still being created.
+                            conversation.takeIf { it.id != 0L }?.id
                         }.distinctUntilChanged())
                 { visible, threadId ->
                     when (visible) {
@@ -471,7 +474,7 @@ class ComposeViewModel @Inject constructor(
         view.activityVisibleIntent
                 .filter { visible -> !visible }
                 .withLatestFrom(conversation) { _, conversation -> conversation }
-                .mapNotNull { conversation -> conversation.takeIf { it.isValid }?.id }
+                .mapNotNull { conversation -> conversation.takeIf { it.id != 0L }?.id }
                 .observeOn(Schedulers.io())
                 .withLatestFrom(view.textChangedIntent) { threadId, draft ->
                     conversationRepo.saveDraft(threadId, draft.toString())

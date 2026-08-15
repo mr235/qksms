@@ -32,7 +32,6 @@ import com.moez.qksms.common.util.Colors
 import com.moez.qksms.common.util.extensions.resolveThemeBoolean
 import com.moez.qksms.common.util.extensions.resolveThemeColor
 import com.moez.qksms.extensions.Optional
-import com.moez.qksms.extensions.asObservable
 import com.moez.qksms.extensions.mapNotNull
 import com.moez.qksms.repository.ConversationRepository
 import com.moez.qksms.repository.MessageRepository

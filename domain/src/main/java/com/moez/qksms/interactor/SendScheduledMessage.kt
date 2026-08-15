@@ -26,7 +26,6 @@ import com.moez.qksms.model.Attachment
 import com.moez.qksms.repository.ScheduledMessageRepository
 import io.reactivex.Flowable
 import io.reactivex.rxkotlin.toFlowable
-import io.realm.RealmList
 import javax.inject.Inject
 
 class SendScheduledMessage @Inject constructor(
@@ -42,7 +41,7 @@ class SendScheduledMessage @Inject constructor(
                     if (message.sendAsGroup) {
                         listOf(message)
                     } else {
-                        message.recipients.map { recipient -> message.copy(recipients = RealmList(recipient)) }
+                        message.recipients.map { recipient -> message.copy(recipients = mutableListOf(recipient)) }
                     }.toFlowable()
                 }
                 .map { message ->

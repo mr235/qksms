@@ -23,7 +23,6 @@ import com.moez.qksms.db.entity.ConversationRecipientCrossRef
 import com.moez.qksms.db.relation.ConversationFull
 import com.moez.qksms.model.Conversation
 import com.moez.qksms.model.Recipient
-import io.realm.RealmList
 
 /**
  * Entity/Relation ↔ domain-model mappers for [Conversation].
@@ -39,9 +38,7 @@ fun ConversationFull.toDomain(): Conversation = Conversation(
     archived = conversation.archived,
     blocked = conversation.blocked,
     pinned = conversation.pinned,
-    recipients = RealmList<Recipient>().apply {
-        addAll(orderedRecipients().map { it.toDomain() })
-    },
+    recipients = orderedRecipients().map { it.toDomain() }.toMutableList(),
     lastMessage = lastMessage?.toDomain(),
     draft = conversation.draft,
     blockingClient = conversation.blockingClient,
@@ -57,7 +54,7 @@ fun ConversationEntity.toDomain(
     archived = archived,
     blocked = blocked,
     pinned = pinned,
-    recipients = RealmList<Recipient>().apply { addAll(recipients) },
+    recipients = recipients.toMutableList(),
     lastMessage = lastMessage,
     draft = draft,
     blockingClient = blockingClient,
@@ -77,7 +74,7 @@ fun Conversation.toEntity(): ConversationEntity = ConversationEntity(
     name = name
 )
 
-/** Junction rows for this conversation's recipients, preserving RealmList order. */
+/** Junction rows for this conversation's recipients, preserving list order. */
 fun Conversation.recipientCrossRefs(): List<ConversationRecipientCrossRef> =
     recipients.mapIndexed { seq, recipient ->
         ConversationRecipientCrossRef(conversationId = id, recipientId = recipient.id, seq = seq)

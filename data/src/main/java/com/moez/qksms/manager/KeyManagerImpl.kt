@@ -19,21 +19,12 @@
 package com.moez.qksms.manager
 
 import com.moez.qksms.db.dao.MessageDao
-import com.moez.qksms.model.Message
-import com.moez.qksms.util.Preferences
-import io.realm.Realm
 import javax.inject.Inject
-import javax.inject.Provider
 import javax.inject.Singleton
 
 @Singleton
 class KeyManagerImpl @Inject constructor(
-    private val prefs: Preferences,
-    /**
-     * Lazy so that simply having a KeyManager in the graph does not open the Room database while
-     * the Realm path is still the active one.
-     */
-    private val messageDao: Provider<MessageDao>
+    private val messageDao: MessageDao
 ) : KeyManager {
 
     private var initialized = false
@@ -52,12 +43,7 @@ class KeyManagerImpl @Inject constructor(
      */
     override fun newId(): Long {
         if (!initialized) {
-            maxValue = when (prefs.useRoomStorage.get()) {
-                true -> messageDao.get().getMaxId()
-                false -> Realm.getDefaultInstance().use { realm ->
-                    realm.where(Message::class.java).max("id")?.toLong() ?: 0L
-                }
-            }
+            maxValue = messageDao.getMaxId()
             initialized = true
         }
 

@@ -31,16 +31,12 @@ import com.moez.qksms.manager.AnalyticsManager
 import com.moez.qksms.manager.BillingManager
 import com.moez.qksms.manager.ReferralManager
 import com.moez.qksms.migration.QkMigration
-import com.moez.qksms.migration.QkRealmMigration
-import com.moez.qksms.migration.RealmToRoomMigrator
 import com.moez.qksms.util.NightModeManager
 import com.uber.rxdogtag.RxDogTag
 import com.uber.rxdogtag.autodispose.AutoDisposeConfigurer
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
-import io.realm.Realm
-import io.realm.RealmConfiguration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -61,8 +57,6 @@ class QKApplication : Application(), HasAndroidInjector {
     @Inject lateinit var dispatchingAndroidInjector: DispatchingAndroidInjector<Any>
     @Inject lateinit var fileLoggingTree: FileLoggingTree
     @Inject lateinit var nightModeManager: NightModeManager
-    @Inject lateinit var realmMigration: QkRealmMigration
-    @Inject lateinit var realmToRoomMigrator: RealmToRoomMigrator
     @Inject lateinit var referralManager: ReferralManager
 
     override fun onCreate() {
@@ -71,21 +65,7 @@ class QKApplication : Application(), HasAndroidInjector {
         AppComponentManager.init(this)
         appComponent.inject(this)
 
-        Realm.init(this)
-        Realm.setDefaultConfiguration(RealmConfiguration.Builder()
-                .compactOnLaunch()
-                .migration(realmMigration)
-                .schemaVersion(QkRealmMigration.SchemaVersion)
-                .build())
-
         qkMigration.performMigration()
-
-        // Copy Realm → Room off the main thread. The `useRoomStorage` flag stays off until this
-        // succeeds — see [RealmToRoomMigrator] — so the running Realm repositories keep serving
-        // reads while the copy happens in the background. Skipped once `realmMigrationDone` flips.
-        GlobalScope.launch(Dispatchers.IO) {
-            realmToRoomMigrator.migrate()
-        }
 
         GlobalScope.launch(Dispatchers.IO) {
             referralManager.trackReferrer()

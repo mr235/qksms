@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import com.moez.qksms.R
 import com.moez.qksms.common.Navigator
 import com.moez.qksms.common.base.QkViewModel
+import com.moez.qksms.db.dao.SyncLogDao
 import com.moez.qksms.extensions.mapNotNull
 import com.moez.qksms.interactor.DeleteConversations
 import com.moez.qksms.interactor.MarkAllSeen
@@ -39,7 +40,6 @@ import com.moez.qksms.manager.BillingManager
 import com.moez.qksms.manager.ChangelogManager
 import com.moez.qksms.manager.PermissionManager
 import com.moez.qksms.manager.RatingManager
-import com.moez.qksms.model.SyncLog
 import com.moez.qksms.repository.ConversationRepository
 import com.moez.qksms.repository.SyncRepository
 import com.moez.qksms.util.Preferences
@@ -50,7 +50,6 @@ import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.Subject
-import io.realm.Realm
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -78,6 +77,7 @@ class MainViewModel @Inject constructor(
     private val prefs: Preferences,
     private val ratingManager: RatingManager,
     private val syncContacts: SyncContacts,
+    private val syncLogDao: SyncLogDao,
     private val syncMessages: SyncMessages
 ) : QkViewModel<MainView, MainState>(MainState(page = Inbox())) {
 
@@ -132,8 +132,8 @@ class MainViewModel @Inject constructor(
 
         // If we have all permissions and we've never run a sync, run a sync. This will be the case
         // when upgrading from 2.7.3, or if the app's data was cleared
-        val lastSync = Realm.getDefaultInstance().use { realm -> realm.where(SyncLog::class.java)?.max("date") ?: 0 }
-        if (lastSync == 0 && permissionManager.isDefaultSms() && permissionManager.hasReadSms() && permissionManager.hasContacts()) {
+        val lastSync = syncLogDao.getLatestSyncDate()
+        if (lastSync == 0L && permissionManager.isDefaultSms() && permissionManager.hasReadSms() && permissionManager.hasContacts()) {
             syncMessages.execute(Unit)
         }
 

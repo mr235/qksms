@@ -21,16 +21,14 @@ package com.moez.qksms.db.mapper
 import com.moez.qksms.db.entity.ContactGroupContactCrossRef
 import com.moez.qksms.db.entity.ContactGroupEntity
 import com.moez.qksms.db.relation.ContactGroupFull
-import com.moez.qksms.model.Contact
 import com.moez.qksms.model.ContactGroup
-import io.realm.RealmList
 
 /** Entity/Relation ↔ domain-model mappers for [ContactGroup]. */
 
 fun ContactGroupFull.toDomain(): ContactGroup = ContactGroup(
     id = group.id,
     title = group.title,
-    contacts = RealmList<Contact>().apply { addAll(contacts.map { it.toDomain() }) }
+    contacts = contacts.map { it.toDomain() }.toMutableList()
 )
 
 fun ContactGroup.toEntity(): ContactGroupEntity = ContactGroupEntity(

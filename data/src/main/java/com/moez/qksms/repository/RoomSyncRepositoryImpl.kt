@@ -51,7 +51,6 @@ import com.moez.qksms.util.PhoneNumberUtils
 import com.moez.qksms.util.tryOrNull
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.Subject
-import io.realm.RealmList
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -142,9 +141,7 @@ class RoomSyncRepositoryImpl @Inject constructor(
                     syncProgress.onNext(SyncRepository.SyncProgress.Running(max, progress, false))
                     messages += cursorToMessage.map(Pair(cursor, messageColumns)).apply {
                         if (isMms()) {
-                            this.parts = RealmList<MmsPart>().apply {
-                                addAll(partsByContentId[contentId].orEmpty())
-                            }
+                            this.parts = partsByContentId[contentId].orEmpty().toMutableList()
                         }
                     }
                 }
@@ -263,9 +260,7 @@ class RoomSyncRepositoryImpl @Inject constructor(
                 existingId?.let { this.id = it }
 
                 if (isMms()) {
-                    parts = RealmList<MmsPart>().apply {
-                        addAll(cursorToPart.getPartsCursor(contentId)?.map { cursorToPart.map(it) }.orEmpty())
-                    }
+                    parts = cursorToPart.getPartsCursor(contentId)?.map { cursorToPart.map(it) }.orEmpty().toMutableList()
                 }
 
                 conversationRepo.getOrCreateConversation(threadId)

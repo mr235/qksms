@@ -21,21 +21,17 @@ package com.moez.qksms.model
 import android.content.ContentUris
 import android.net.Uri
 import android.provider.Telephony.*
-import io.realm.RealmList
-import io.realm.RealmObject
-import io.realm.annotations.Index
-import io.realm.annotations.PrimaryKey
 
-open class Message : RealmObject() {
+class Message {
 
     enum class AttachmentType { TEXT, IMAGE, VIDEO, AUDIO, SLIDESHOW, NOT_LOADED }
 
-    @PrimaryKey var id: Long = 0
+    var id: Long = 0
 
-    @Index var threadId: Long = 0
+    var threadId: Long = 0
 
     // The MMS-SMS content provider returns messages where duplicate ids can exist. This is because
-    // SMS and MMS are stored in separate tables. We can't use these ids as our realm message id
+    // SMS and MMS are stored in separate tables. We can't use these ids as our message id
     // since it's our primary key for the single message object, so we'll store the original id in
     // case we need to access the original message item in the content provider
     var contentId: Long = 0
@@ -70,7 +66,7 @@ open class Message : RealmObject() {
     var mmsStatus: Int = 0
     var subject: String = ""
     var textContentType: String = ""
-    var parts: RealmList<MmsPart> = RealmList()
+    var parts: MutableList<MmsPart> = mutableListOf()
 
     fun getUri(): Uri {
         val baseUri = if (isMms()) Mms.CONTENT_URI else Sms.CONTENT_URI

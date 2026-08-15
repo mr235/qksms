@@ -35,6 +35,7 @@ import com.moez.qksms.common.util.DateFormatter
 import com.moez.qksms.common.util.extensions.setVisible
 import com.moez.qksms.databinding.GalleryActivityBinding
 import com.moez.qksms.model.MmsPart
+import com.moez.qksms.repository.MessageRepository
 import dagger.android.AndroidInjection
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
@@ -44,6 +45,7 @@ import javax.inject.Inject
 class GalleryActivity : QkActivity(), GalleryView {
 
     @Inject lateinit var dateFormatter: DateFormatter
+    @Inject lateinit var messageRepo: MessageRepository
     @Inject lateinit var viewModelFactory: ViewModelProvider.Factory
     @Inject lateinit var pagerAdapter: GalleryPagerAdapter
 
@@ -85,7 +87,10 @@ class GalleryActivity : QkActivity(), GalleryView {
     }
 
     fun onPageSelected(position: Int) {
-        binding.toolbarSubtitle.text = pagerAdapter.getItemOrNull(position)?.messages?.firstOrNull()?.date
+        // Realm exposed the owning message via a @LinkingObjects back-reference on MmsPart; under
+        // Room the part only carries its parent's id, so resolve the message to read its date.
+        binding.toolbarSubtitle.text = pagerAdapter.getItemOrNull(position)
+                ?.let { part -> messageRepo.getMessageForPart(part.id)?.date }
                 ?.let(dateFormatter::getDetailedTimestamp)
         binding.toolbarSubtitle.isVisible = binding.toolbarTitle.text.isNotBlank()
 

@@ -2,7 +2,6 @@ package com.moez.qksms.feature.conversationinfo
 
 import com.moez.qksms.model.MmsPart
 import com.moez.qksms.model.Recipient
-import io.realm.RealmList
 
 sealed class ConversationInfoItem {
 
@@ -10,7 +9,7 @@ sealed class ConversationInfoItem {
 
     data class ConversationInfoSettings(
         val name: String,
-        val recipients: RealmList<Recipient>,
+        val recipients: List<Recipient>,
         val archived: Boolean,
         val blocked: Boolean
     ) : ConversationInfoItem()

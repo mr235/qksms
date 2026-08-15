@@ -81,15 +81,10 @@ import com.moez.qksms.mapper.CursorToRecipient
 import com.moez.qksms.mapper.CursorToRecipientImpl
 import com.moez.qksms.mapper.RatingManagerImpl
 import com.moez.qksms.repository.BackupRepository
-import com.moez.qksms.repository.BackupRepositoryImpl
 import com.moez.qksms.repository.BlockingRepository
-import com.moez.qksms.repository.BlockingRepositoryImpl
 import com.moez.qksms.repository.ContactRepository
-import com.moez.qksms.repository.ContactRepositoryImpl
 import com.moez.qksms.repository.ConversationRepository
-import com.moez.qksms.repository.ConversationRepositoryImpl
 import com.moez.qksms.repository.MessageRepository
-import com.moez.qksms.repository.MessageRepositoryImpl
 import com.moez.qksms.repository.RoomBackupRepositoryImpl
 import com.moez.qksms.repository.RoomBlockingRepositoryImpl
 import com.moez.qksms.repository.RoomContactRepositoryImpl
@@ -98,15 +93,11 @@ import com.moez.qksms.repository.RoomMessageRepositoryImpl
 import com.moez.qksms.repository.RoomScheduledMessageRepositoryImpl
 import com.moez.qksms.repository.RoomSyncRepositoryImpl
 import com.moez.qksms.repository.ScheduledMessageRepository
-import com.moez.qksms.repository.ScheduledMessageRepositoryImpl
 import com.moez.qksms.repository.SyncRepository
-import com.moez.qksms.repository.SyncRepositoryImpl
-import com.moez.qksms.util.Preferences
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
-import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module(subcomponents = [
@@ -229,66 +220,34 @@ class AppModule(private var application: Application) {
     @Provides
     fun provideCursorToRecipient(mapper: CursorToRecipientImpl): CursorToRecipient = mapper
 
-    // Repository
-    //
-    // Two implementations of each repository coexist during the Realm → Room migration. The
-    // `useRoomStorage` preference picks between them at graph-construction time. Both are injected
-    // as Providers so only the selected implementation is ever instantiated.
+    // Repository — Room is the sole storage backend.
 
     @Provides
     @Singleton
-    fun provideBackupRepository(
-        prefs: Preferences,
-        realm: Provider<BackupRepositoryImpl>,
-        room: Provider<RoomBackupRepositoryImpl>
-    ): BackupRepository = if (prefs.useRoomStorage.get()) room.get() else realm.get()
+    fun provideBackupRepository(impl: RoomBackupRepositoryImpl): BackupRepository = impl
 
     @Provides
     @Singleton
-    fun provideBlockingRepository(
-        prefs: Preferences,
-        realm: Provider<BlockingRepositoryImpl>,
-        room: Provider<RoomBlockingRepositoryImpl>
-    ): BlockingRepository = if (prefs.useRoomStorage.get()) room.get() else realm.get()
+    fun provideBlockingRepository(impl: RoomBlockingRepositoryImpl): BlockingRepository = impl
 
     @Provides
     @Singleton
-    fun provideContactRepository(
-        prefs: Preferences,
-        realm: Provider<ContactRepositoryImpl>,
-        room: Provider<RoomContactRepositoryImpl>
-    ): ContactRepository = if (prefs.useRoomStorage.get()) room.get() else realm.get()
+    fun provideContactRepository(impl: RoomContactRepositoryImpl): ContactRepository = impl
 
     @Provides
     @Singleton
-    fun provideConversationRepository(
-        prefs: Preferences,
-        realm: Provider<ConversationRepositoryImpl>,
-        room: Provider<RoomConversationRepositoryImpl>
-    ): ConversationRepository = if (prefs.useRoomStorage.get()) room.get() else realm.get()
+    fun provideConversationRepository(impl: RoomConversationRepositoryImpl): ConversationRepository = impl
 
     @Provides
     @Singleton
-    fun provideMessageRepository(
-        prefs: Preferences,
-        realm: Provider<MessageRepositoryImpl>,
-        room: Provider<RoomMessageRepositoryImpl>
-    ): MessageRepository = if (prefs.useRoomStorage.get()) room.get() else realm.get()
+    fun provideMessageRepository(impl: RoomMessageRepositoryImpl): MessageRepository = impl
 
     @Provides
     @Singleton
-    fun provideScheduledMessagesRepository(
-        prefs: Preferences,
-        realm: Provider<ScheduledMessageRepositoryImpl>,
-        room: Provider<RoomScheduledMessageRepositoryImpl>
-    ): ScheduledMessageRepository = if (prefs.useRoomStorage.get()) room.get() else realm.get()
+    fun provideScheduledMessagesRepository(impl: RoomScheduledMessageRepositoryImpl): ScheduledMessageRepository = impl
 
     @Provides
     @Singleton
-    fun provideSyncRepository(
-        prefs: Preferences,
-        realm: Provider<SyncRepositoryImpl>,
-        room: Provider<RoomSyncRepositoryImpl>
-    ): SyncRepository = if (prefs.useRoomStorage.get()) room.get() else realm.get()
+    fun provideSyncRepository(impl: RoomSyncRepositoryImpl): SyncRepository = impl
 
 }

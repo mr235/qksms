@@ -25,14 +25,13 @@ import com.moez.qksms.db.mapper.toDomain
 import com.moez.qksms.db.mapper.toEntity
 import com.moez.qksms.model.ScheduledMessage
 import io.reactivex.Flowable
-import io.realm.RealmList
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
  * Room-backed [ScheduledMessageRepository].
  *
- * Mirrors [ScheduledMessageRepositoryImpl] semantics, with the two `RealmList<String>` fields
+ * Mirrors [ScheduledMessageRepositoryImpl] semantics, with the two `MutableList<String>` fields
  * (recipients, attachments) living in ordered child tables instead of being embedded in the row —
  * see [ScheduledMessageDao.save], which replaces those children atomically with the parent.
  */
@@ -57,10 +56,10 @@ class RoomScheduledMessageRepositoryImpl @Inject constructor(
             id = id,
             date = date,
             subId = subId,
-            recipients = RealmList<String>().apply { addAll(recipients) },
+            recipients = recipients.toMutableList(),
             sendAsGroup = sendAsGroup,
             body = body,
-            attachments = RealmList<String>().apply { addAll(attachments) }
+            attachments = attachments.toMutableList()
         )
 
         scheduledMessageDao.save(

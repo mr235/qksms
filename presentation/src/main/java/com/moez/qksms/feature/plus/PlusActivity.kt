@@ -24,7 +24,6 @@ import android.view.LayoutInflater
 import android.widget.TextView
 import androidx.core.view.children
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProviders
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.jakewharton.rxbinding3.view.clicks
 import com.moez.qksms.BuildConfig
@@ -60,7 +59,7 @@ class PlusActivity : QkThemedActivity(), PlusView {
         )
     }
 
-    private val viewModel by lazy { ViewModelProviders.of(this, viewModelFactory)[PlusViewModel::class.java] }
+    private val viewModel by lazy { ViewModelProvider(this, viewModelFactory)[PlusViewModel::class.java] }
 
     override val upgradeIntent by lazy { binding.upgrade.clicks() }
     override val upgradeDonateIntent by lazy { binding.upgradeDonate.clicks() }

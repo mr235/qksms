@@ -22,7 +22,6 @@ import android.graphics.Typeface
 import android.os.Bundle
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProviders
 import com.jakewharton.rxbinding3.view.clicks
 import com.moez.qksms.R
 import com.moez.qksms.common.QkDialog
@@ -48,7 +47,7 @@ class ScheduledActivity : QkThemedActivity(), ScheduledView {
     override val composeIntent by lazy { binding.compose.clicks() }
     override val upgradeIntent by lazy { binding.upgrade.clicks() }
 
-    private val viewModel by lazy { ViewModelProviders.of(this, viewModelFactory)[ScheduledViewModel::class.java] }
+    private val viewModel by lazy { ViewModelProvider(this, viewModelFactory)[ScheduledViewModel::class.java] }
 
     private lateinit var binding: ScheduledActivityBinding
 

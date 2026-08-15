@@ -48,11 +48,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Room-backed [ConversationRepository]. Mirrors [ConversationRepositoryImpl] semantics.
+ * Room-backed [ConversationRepository].
  *
- * `getOrCreateConversation` still falls back to [CursorToConversation]/[CursorToRecipient] against
- * the native ContentProvider when Room has no row yet — same as the Realm path — but persists the
- * result via [conversationDao]/[recipientDao] instead of `realm.insertOrUpdate`.
+ * `getOrCreateConversation` falls back to [CursorToConversation]/[CursorToRecipient] against the
+ * native ContentProvider when Room has no row yet, and persists the result via [conversationDao]/
+ * [recipientDao].
  */
 @Singleton
 class RoomConversationRepositoryImpl @Inject constructor(

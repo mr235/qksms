@@ -25,17 +25,14 @@ import androidx.room.Query
 import com.moez.qksms.db.entity.MmsPartEntity
 import io.reactivex.Flowable
 
-/** Room translation of the MmsPart queries (MessageRepositoryImpl, SyncRepositoryImpl). */
+/** Room translation of the MmsPart queries (RoomMessageRepositoryImpl, RoomSyncRepositoryImpl). */
 @Dao
 interface MmsPartDao {
 
     @Query("SELECT * FROM mms_part WHERE id = :id")
     fun getPart(id: Long): MmsPartEntity?
 
-    /**
-     * Realm: `equalTo("messages.threadId", threadId)` — the reverse `@LinkingObjects` link is
-     * expressed here as an explicit join through Message.
-     */
+    /** Image and video parts in a thread, found by joining through Message. */
     @Query(
         """
         SELECT p.* FROM mms_part p
@@ -46,7 +43,7 @@ interface MmsPartDao {
     )
     fun getPartsForConversation(threadId: Long): Flowable<List<MmsPartEntity>>
 
-    /** SyncRepositoryImpl re-attaches parts to their MMS message by contentId. */
+    /** RoomSyncRepositoryImpl re-attaches parts to their MMS message by contentId. */
     @Query("SELECT * FROM mms_part WHERE messageId = :contentId")
     fun getPartsByMessageId(contentId: Long): List<MmsPartEntity>
 

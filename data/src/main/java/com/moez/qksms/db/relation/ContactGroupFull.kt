@@ -25,7 +25,7 @@ import com.moez.qksms.db.entity.ContactEntity
 import com.moez.qksms.db.entity.ContactGroupContactCrossRef
 import com.moez.qksms.db.entity.ContactGroupEntity
 
-/** Reassembles the Realm `ContactGroup.contacts: RealmList<Contact>` relation. */
+/** A contact group with its member contacts, joined through [ContactGroupContactCrossRef]. */
 data class ContactGroupFull(
     @Embedded val group: ContactGroupEntity,
     @Relation(

@@ -25,8 +25,8 @@ import androidx.room.PrimaryKey
 /**
  * Room storage mirror of [com.moez.qksms.model.MmsPart].
  *
- * The Realm `@LinkingObjects("parts")` reverse link is replaced by the [messageId] foreign key;
- * see MmsPartDao.getMessageForPart for the reverse lookup.
+ * The parent message is referenced through the [messageId] foreign key; see
+ * MmsPartDao.getMessageForPart for the reverse lookup.
  */
 @Entity(
     tableName = "mms_part",

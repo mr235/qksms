@@ -28,11 +28,11 @@ import com.moez.qksms.db.entity.ContactGroupEntity
 import com.moez.qksms.db.relation.ContactGroupFull
 import io.reactivex.Flowable
 
-/** Room translation of the ContactGroup queries (ContactRepositoryImpl, SyncRepositoryImpl). */
+/** Room translation of the ContactGroup queries (RoomContactRepositoryImpl, RoomSyncRepositoryImpl). */
 @Dao
 interface ContactGroupDao {
 
-    /** Realm `isNotEmpty("contacts")` — groups with at least one member. */
+    /** Groups with at least one member. */
     @Transaction
     @Query(
         """

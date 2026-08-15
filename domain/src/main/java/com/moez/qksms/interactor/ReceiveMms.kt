@@ -54,8 +54,8 @@ class ReceiveMms @Inject constructor(
                 }
                 .mapNotNull { message ->
                     // Because we use the smsmms library for receiving and storing MMS, we'll need
-                    // to check if it should be blocked after we've pulled it into realm. If it
-                    // turns out that it should be dropped, then delete it
+                    // to check if it should be blocked after we've pulled it into the database. If
+                    // it turns out that it should be dropped, then delete it
                     // TODO Don't store blocked messages in the first place
                     val action = blockingClient.shouldBlock(message.address).blockingGet()
                     val shouldDrop = prefs.drop.get()

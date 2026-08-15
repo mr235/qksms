@@ -24,8 +24,8 @@ import androidx.room.PrimaryKey
 /**
  * Room storage mirror of [com.moez.qksms.model.Contact].
  *
- * `numbers: RealmList<PhoneNumber>` becomes a one-to-many via [PhoneNumberEntity.contactLookupKey].
- * The `@Ignore var namePinyin` field is not persisted (it was transient in Realm too).
+ * A contact's phone numbers are stored as a one-to-many via [PhoneNumberEntity.contactLookupKey].
+ * The `@Ignore var namePinyin` field is not persisted (it is transient).
  */
 @Entity(tableName = "contact")
 data class ContactEntity(

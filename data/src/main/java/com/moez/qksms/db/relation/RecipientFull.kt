@@ -25,7 +25,7 @@ import com.moez.qksms.db.entity.PhoneNumberEntity
 import com.moez.qksms.db.entity.RecipientEntity
 
 /**
- * Reassembles the Realm `Recipient.contact: Contact?` object reference, joined on
+ * A recipient with its optional contact, joined on
  * [RecipientEntity.contactLookupKey] == [ContactEntity.lookupKey].
  *
  * The contact carries its own phone numbers so `Contact.getDefaultNumber()` keeps working.

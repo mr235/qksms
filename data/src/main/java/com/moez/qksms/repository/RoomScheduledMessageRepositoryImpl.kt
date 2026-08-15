@@ -31,9 +31,9 @@ import javax.inject.Singleton
 /**
  * Room-backed [ScheduledMessageRepository].
  *
- * Mirrors [ScheduledMessageRepositoryImpl] semantics, with the two `MutableList<String>` fields
- * (recipients, attachments) living in ordered child tables instead of being embedded in the row —
- * see [ScheduledMessageDao.save], which replaces those children atomically with the parent.
+ * The two `MutableList<String>` fields (recipients, attachments) live in ordered child tables
+ * instead of being embedded in the row — see [ScheduledMessageDao.save], which replaces those
+ * children atomically with the parent.
  */
 @Singleton
 class RoomScheduledMessageRepositoryImpl @Inject constructor(
@@ -48,8 +48,8 @@ class RoomScheduledMessageRepositoryImpl @Inject constructor(
         body: String,
         attachments: List<String>
     ) {
-        // The Realm impl derives ids from `max("id") + 1` rather than autoincrement, so ids stay
-        // dense and comparable across the two storage paths during the migration.
+        // Ids are derived from `max("id") + 1` rather than autoincrement, so they stay dense and
+        // comparable.
         val id = scheduledMessageDao.getMaxId() + 1
 
         val message = ScheduledMessage(

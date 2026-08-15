@@ -47,7 +47,7 @@ class SmsProviderChangedReceiver : BroadcastReceiver() {
         // If the value is null, don't continue
         val uri = intent.data ?: return
 
-        // Sync the message to our realm
+        // Sync the message to our database
         val pendingResult = goAsync()
         syncMessage.execute(uri) { pendingResult.finish() }
     }

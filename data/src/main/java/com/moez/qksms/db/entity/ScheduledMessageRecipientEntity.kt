@@ -22,7 +22,7 @@ import androidx.room.Entity
 import androidx.room.Index
 
 /**
- * One row per entry in the Realm `ScheduledMessage.recipients: RealmList<String>`.
+ * One row per recipient address on a [ScheduledMessageEntity].
  *
  * [seq] preserves list order; the row is deleted with its parent (see ScheduledMessageDao).
  */

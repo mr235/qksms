@@ -22,10 +22,10 @@ import androidx.room.Entity
 import androidx.room.Index
 
 /**
- * Junction table for the Realm `Conversation.recipients: RealmList<Recipient>` relation.
+ * Junction table for the many-to-many between conversations and recipients.
  *
- * [seq] preserves the ordering that RealmList guaranteed — conversation titles are built by
- * joining recipient display names, so the order is user-visible.
+ * [seq] preserves recipient order — conversation titles are built by joining recipient display
+ * names, so the order is user-visible.
  */
 @Entity(
     tableName = "conversation_recipient",

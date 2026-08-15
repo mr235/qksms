@@ -48,11 +48,10 @@ import javax.inject.Singleton
 import kotlin.concurrent.schedule
 
 /**
- * Room-backed [BackupRepository]. Mirrors [BackupRepositoryImpl] semantics.
+ * Room-backed [BackupRepository].
  *
- * The only Realm dependency in the original was [performBackup] reading every message; that becomes
- * [MessageDao.getAllMessagesSnapshot]. Everything else already goes through the native
- * ContentProvider or the injected [SyncRepository], so those bodies are unchanged.
+ * [performBackup] reads every message via [MessageDao.getAllMessagesSnapshot]. Everything else
+ * goes through the native ContentProvider or the injected [SyncRepository].
  */
 @Singleton
 class RoomBackupRepositoryImpl @Inject constructor(

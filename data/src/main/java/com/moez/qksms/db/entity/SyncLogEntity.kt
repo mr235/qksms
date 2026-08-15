@@ -24,8 +24,8 @@ import androidx.room.PrimaryKey
 /**
  * Room storage mirror of [com.moez.qksms.model.SyncLog].
  *
- * Realm's SyncLog had no primary key; Room requires one, so an auto-generated [rowId] is added.
- * Only the newest row's [date] is ever read, so the synthetic key has no functional impact.
+ * SyncLog has no natural primary key, so an auto-generated [rowId] is used. Only the newest
+ * row's [date] is ever read, so the synthetic key has no functional impact.
  */
 @Entity(tableName = "sync_log")
 data class SyncLogEntity(

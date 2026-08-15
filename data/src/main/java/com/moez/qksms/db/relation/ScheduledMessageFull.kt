@@ -25,7 +25,7 @@ import com.moez.qksms.db.entity.ScheduledMessageEntity
 import com.moez.qksms.db.entity.ScheduledMessageRecipientEntity
 
 /**
- * Reassembles the two `RealmList<String>` fields of
+ * Reassembles the recipients and attachments lists of
  * [com.moez.qksms.model.ScheduledMessage] from their ordered child tables.
  *
  * Rows come back unordered from @Relation, so callers must sort by `seq` — see

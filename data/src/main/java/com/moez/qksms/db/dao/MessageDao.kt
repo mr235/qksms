@@ -28,13 +28,13 @@ import com.moez.qksms.db.relation.MessageWithParts
 import io.reactivex.Flowable
 
 /**
- * Room translation of the Message queries in MessageRepositoryImpl, ConversationRepositoryImpl,
- * SyncRepositoryImpl, BackupRepositoryImpl and KeyManagerImpl.
+ * Room translation of the Message queries in RoomMessageRepositoryImpl, RoomConversationRepositoryImpl,
+ * RoomSyncRepositoryImpl, RoomBackupRepositoryImpl and KeyManagerImpl.
  */
 @Dao
 interface MessageDao {
 
-    /** Realm: `equalTo("threadId").contains("body"|"parts.text").sort("date")` + findAllAsync. */
+    /** Messages in a thread, optionally filtered by a body/parts-text query, oldest first. */
     @Transaction
     @Query(
         """
@@ -51,12 +51,12 @@ interface MessageDao {
     @Query("SELECT * FROM message WHERE id = :id")
     fun getMessage(id: Long): MessageWithParts?
 
-    /** Replaces the Realm `equalTo("parts.id", id)` reverse traversal. */
+    /** The message that owns a given MMS part. */
     @Transaction
     @Query("SELECT m.* FROM message m JOIN mms_part p ON p.messageId = m.id WHERE p.id = :partId")
     fun getMessageForPart(partId: Long): MessageWithParts?
 
-    /** Realm's nested `beginGroup()...or()...endGroup()` on (type, boxId). */
+    /** Most recent incoming message in a thread, matched on (type, boxId). */
     @Transaction
     @Query(
         """
@@ -83,7 +83,7 @@ interface MessageDao {
     @Query("SELECT * FROM message WHERE date < :beforeDate")
     fun getMessagesOlderThan(beforeDate: Long): List<MessageEntity>
 
-    /** Realm: `contains("body"|"parts.text")`, used by searchConversations. */
+    /** Matches on body or MMS parts text; used by searchConversations. */
     @Query(
         """
         SELECT * FROM message
@@ -96,20 +96,20 @@ interface MessageDao {
     @Query("SELECT COUNT(*) FROM message WHERE threadId = :threadId AND date > :sinceDate")
     fun countRecentMessages(threadId: Long, sinceDate: Long): Int
 
-    /** Realm: `sort("date", DESCENDING).equalTo("threadId", id).findFirst()`. */
+    /** The most recent message in a thread. */
     @Query("SELECT * FROM message WHERE threadId = :threadId ORDER BY date DESC LIMIT 1")
     fun getLastMessage(threadId: Long): MessageEntity?
 
-    /** Realm: `equalTo("type", type).equalTo("contentId", id).findFirst()` in syncMessage. */
+    /** Looks up a message by (type, contentId) in syncMessage. */
     @Query("SELECT * FROM message WHERE type = :type AND contentId = :contentId LIMIT 1")
     fun getMessageByContentId(type: String, contentId: Long): MessageEntity?
 
-    /** BackupRepositoryImpl.performBackup — `sort("date").findAll().createSnapshot()`. */
+    /** RoomBackupRepositoryImpl.performBackup — all messages, oldest first. */
     @Transaction
     @Query("SELECT * FROM message ORDER BY date ASC")
     fun getAllMessagesSnapshot(): List<MessageWithParts>
 
-    /** KeyManagerImpl.newId() — replaces Realm `max("id")`. */
+    /** KeyManagerImpl.newId() — the current maximum message id. */
     @Query("SELECT COALESCE(MAX(id), 0) FROM message")
     fun getMaxId(): Long
 
@@ -147,11 +147,11 @@ interface MessageDao {
     )
     fun markDeliveryFailed(id: Long, deliveryStatus: Int, dateSent: Long, errorCode: Int)
 
-    /** MessageRepositoryImpl backfills contentId after the ContentProvider insert returns. */
+    /** RoomMessageRepositoryImpl backfills contentId after the ContentProvider insert returns. */
     @Query("UPDATE message SET contentId = :contentId WHERE id = :id")
     fun updateContentId(id: Long, contentId: Long)
 
-    /** MessageRepositoryImpl.markUnread flips the conversation's last message back to unread. */
+    /** RoomMessageRepositoryImpl.markUnread flips the conversation's last message back to unread. */
     @Query("UPDATE message SET read = 0 WHERE id IN (:ids)")
     fun markUnread(ids: List<Long>)
 

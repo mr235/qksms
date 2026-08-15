@@ -29,10 +29,10 @@ import com.moez.qksms.db.relation.ContactFull
 import io.reactivex.Flowable
 
 /**
- * Room translation of the Contact / PhoneNumber queries (ContactRepositoryImpl,
- * SyncRepositoryImpl, ConversationRepositoryImpl).
+ * Room translation of the Contact / PhoneNumber queries (RoomContactRepositoryImpl,
+ * RoomSyncRepositoryImpl, RoomConversationRepositoryImpl).
  *
- * Note: Realm's `sort("name")` is a plain lexicographic sort. ContactRepositoryImpl re-sorts in
+ * Note: `ORDER BY name` is a plain lexicographic sort. RoomContactRepositoryImpl re-sorts in
  * Kotlin (letters before non-letters, case-insensitive) for the picker, so that comparator stays
  * in the repository — only the raw ordering is reproduced here.
  */
@@ -52,9 +52,9 @@ interface ContactDao {
     fun getAllContacts(): List<ContactFull>
 
     /**
-     * Realm getUnmanagedContacts — `contains("numbers.type", mobileLabel)` and/or
-     * `equalTo("starred", true)`. Both filters are pushed into SQL; pass mobileLabel = null to
-     * skip the mobile-only filter and starredOnly = false to skip the starred filter.
+     * Contacts filtered by having at least one mobile-labelled number and/or being starred.
+     * Both filters are pushed into SQL; pass mobileLabel = null to skip the mobile-only filter
+     * and starredOnly = false to skip the starred filter.
      */
     @Transaction
     @Query(
@@ -82,12 +82,12 @@ interface ContactDao {
     @Query("SELECT * FROM phone_number WHERE contactLookupKey = :lookupKey")
     fun getPhoneNumbers(lookupKey: String): List<PhoneNumberEntity>
 
-    /** SyncRepositoryImpl.getContacts() collects the ids of all default numbers. */
+    /** RoomSyncRepositoryImpl.getContacts() collects the ids of all default numbers. */
     @Query("SELECT id FROM phone_number WHERE isDefault = 1")
     fun getDefaultPhoneNumberIds(): List<Long>
 
     /**
-     * ContactRepositoryImpl.setDefaultPhoneNumber — exactly one number per contact ends up
+     * RoomContactRepositoryImpl.setDefaultPhoneNumber — exactly one number per contact ends up
      * default, so this is a single conditional UPDATE rather than a read-modify-write loop.
      */
     @Query(

@@ -24,11 +24,10 @@ import androidx.room.Query
 import com.moez.qksms.db.entity.SyncLogEntity
 
 /**
- * Room translation of the SyncLog access in SyncRepositoryImpl.
+ * Room translation of the SyncLog access in RoomSyncRepositoryImpl.
  *
- * SyncRepositoryImpl only ever appends one row per sync and later reads the most recent date
- * (see `Realm.where(SyncLog::class.java).max("date")` usage in the sync pipeline), so a minimal
- * insert + latest-date query is enough.
+ * The sync pipeline only ever appends one row per sync and later reads the most recent date,
+ * so a minimal insert + latest-date query is enough.
  */
 @Dao
 interface SyncLogDao {

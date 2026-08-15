@@ -25,7 +25,7 @@ import androidx.room.PrimaryKey
 /**
  * Room storage mirror of [com.moez.qksms.model.Recipient].
  *
- * The Realm `contact: Contact?` object reference becomes the nullable [contactLookupKey] column
+ * A recipient references its contact through the nullable [contactLookupKey] column
  * (Contact's primary key is its lookupKey); the Contact is re-attached at read time via @Relation.
  */
 @Entity(

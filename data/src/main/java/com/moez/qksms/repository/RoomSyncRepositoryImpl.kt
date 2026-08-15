@@ -55,16 +55,16 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Room-backed [SyncRepository]. Mirrors [SyncRepositoryImpl] semantics.
+ * Room-backed [SyncRepository].
  *
  * [syncMessages] is a full truncate-and-refill of the message/conversation/recipient/contact
- * tables, so the whole thing runs inside a single [QkDatabase.runInTransaction] block — the Realm
- * path relied on `beginTransaction`/`commitTransaction` for the same all-or-nothing guarantee.
+ * tables, so the whole thing runs inside a single [QkDatabase.runInTransaction] block for an
+ * all-or-nothing guarantee.
  *
- * Two Realm behaviours are reproduced in Kotlin rather than SQL:
+ * Two behaviours are implemented in Kotlin rather than SQL:
  *  - the recipient → contact join uses [PhoneNumberUtils.compare], which has no SQL equivalent;
- *  - MMS parts are attached to their message by matching `part.messageId == message.contentId`,
- *    which is how the Realm path linked them (parts are keyed on the *content* id, not our own).
+ *  - MMS parts are attached to their message by matching `part.messageId == message.contentId`
+ *    (parts are keyed on the *content* id, not our own primary key).
  */
 @Singleton
 class RoomSyncRepositoryImpl @Inject constructor(
@@ -116,9 +116,8 @@ class RoomSyncRepositoryImpl @Inject constructor(
 
         var progress = 0
 
-        // Read every cursor into memory first. The Realm path interleaved reads and writes inside
-        // its transaction; here we keep the transaction as short as possible and do the
-        // ContentProvider traversal outside of it.
+        // Read every cursor into memory first, so the ContentProvider traversal happens outside
+        // the DB transaction and the transaction stays as short as possible.
         val parts = mutableListOf<MmsPart>()
         partsCursor?.use {
             it.forEach { cursor ->
@@ -129,7 +128,7 @@ class RoomSyncRepositoryImpl @Inject constructor(
             }
         }
 
-        // Parts grouped by the content id they belong to — this is the Realm `messageId` linkage
+        // Parts grouped by the content id they belong to — this is the message → part linkage
         val partsByContentId = parts.groupBy { part -> part.messageId }
 
         val messages = mutableListOf<Message>()
@@ -210,10 +209,11 @@ class RoomSyncRepositoryImpl @Inject constructor(
 
             db.messageDao().insertOrUpdateAll(messages.map { it.toEntity() })
             // Parts must be stamped with `messageId = message.id` so the Room `@Relation` join
-            // (MessageWithParts) resolves. `MmsPart.messageId` under Realm is the MMS *content id*,
-            // not our own primary key — going through `messages.flatMap { it.partEntities() }`
-            // rewrites that link. Do NOT swap this for `parts.map { it.toEntity() }`: that would
-            // preserve the raw contentId and every MMS attachment silently disappears.
+            // (MessageWithParts) resolves. `MmsPart.messageId` as read from the ContentProvider is
+            // the MMS *content id*, not our own primary key — going through
+            // `messages.flatMap { it.partEntities() }` rewrites that link. Do NOT swap this for
+            // `parts.map { it.toEntity() }`: that would preserve the raw contentId and every MMS
+            // attachment silently disappears.
             db.mmsPartDao().insertOrUpdateAll(messages.flatMap { it.partEntities() })
 
             db.recipientDao().insertOrUpdateAll(recipients.map { it.toEntity() })

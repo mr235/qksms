@@ -27,7 +27,7 @@ import com.moez.qksms.db.entity.RecipientEntity
 import com.moez.qksms.db.relation.RecipientFull
 import io.reactivex.Flowable
 
-/** Room translation of the Recipient queries (ConversationRepositoryImpl, SyncRepositoryImpl). */
+/** Room translation of the Recipient queries (RoomConversationRepositoryImpl, RoomSyncRepositoryImpl). */
 @Dao
 interface RecipientDao {
 
@@ -35,12 +35,12 @@ interface RecipientDao {
     @Query("SELECT * FROM recipient")
     fun getRecipients(): Flowable<List<RecipientFull>>
 
-    /** Realm getUnmanagedRecipients — `isNotNull("contact")`. */
+    /** Only recipients that resolve to a contact. */
     @Transaction
     @Query("SELECT * FROM recipient WHERE contactLookupKey IS NOT NULL")
     fun getRecipientsWithContact(): Flowable<List<RecipientFull>>
 
-    /** One-shot version of [getRecipients] — ConversationRepositoryImpl.getRecipients(). */
+    /** One-shot version of [getRecipients] — RoomConversationRepositoryImpl.getRecipients(). */
     @Transaction
     @Query("SELECT * FROM recipient")
     fun getRecipientsSnapshot(): List<RecipientFull>

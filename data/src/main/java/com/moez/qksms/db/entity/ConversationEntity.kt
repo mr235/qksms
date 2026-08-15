@@ -25,9 +25,9 @@ import androidx.room.PrimaryKey
 /**
  * Room storage mirror of [com.moez.qksms.model.Conversation].
  *
- * The Realm `lastMessage: Message?` object reference becomes the nullable [lastMessageId] column;
- * the Message is re-attached at read time via a @Relation. The `recipients: RealmList<Recipient>`
- * becomes the [ConversationRecipientCrossRef] junction table.
+ * A conversation's last message is referenced by the nullable [lastMessageId] column and
+ * re-attached at read time via @Relation. Recipients are stored through the
+ * [ConversationRecipientCrossRef] junction table.
  */
 @Entity(
     tableName = "conversation",

@@ -24,7 +24,7 @@ import com.moez.qksms.db.entity.MessageEntity
 import com.moez.qksms.db.entity.MmsPartEntity
 
 /**
- * Reassembles the Realm `Message.parts: RealmList<MmsPart>` relation.
+ * A message with its MMS parts.
  *
  * [MmsPartEntity] rows are matched on [MmsPartEntity.messageId] == [MessageEntity.id].
  */

@@ -21,7 +21,7 @@ package com.moez.qksms.db.entity
 import androidx.room.Entity
 import androidx.room.Index
 
-/** One row per entry in the Realm `ScheduledMessage.attachments: RealmList<String>`. */
+/** One row per attachment URI on a [ScheduledMessageEntity]; [seq] preserves list order. */
 @Entity(
     tableName = "scheduled_message_attachment",
     primaryKeys = ["messageId", "seq"],

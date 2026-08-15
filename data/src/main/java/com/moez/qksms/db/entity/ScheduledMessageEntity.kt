@@ -24,7 +24,7 @@ import androidx.room.PrimaryKey
 /**
  * Room storage mirror of [com.moez.qksms.model.ScheduledMessage].
  *
- * The two `RealmList<String>` fields (recipients, attachments) are split into ordered child
+ * The recipients and attachments lists are split into ordered child
  * tables [ScheduledMessageRecipientEntity] and [ScheduledMessageAttachmentEntity].
  */
 @Entity(tableName = "scheduled_message")

@@ -25,8 +25,8 @@ import androidx.room.PrimaryKey
 /**
  * Room storage mirror of [com.moez.qksms.model.PhoneNumber].
  *
- * [contactLookupKey] links back to [ContactEntity.lookupKey] — this replaces the
- * `Contact.numbers: RealmList<PhoneNumber>` relation.
+ * [contactLookupKey] links back to [ContactEntity.lookupKey], forming the one-to-many
+ * between a contact and its phone numbers.
  */
 @Entity(
     tableName = "phone_number",

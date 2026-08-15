@@ -21,7 +21,7 @@ package com.moez.qksms.db.entity
 import androidx.room.Entity
 import androidx.room.Index
 
-/** Junction table for the Realm `ContactGroup.contacts: RealmList<Contact>` relation. */
+/** Junction table for the many-to-many between contact groups and contacts. */
 @Entity(
     tableName = "contact_group_contact",
     primaryKeys = ["groupId", "contactLookupKey"],

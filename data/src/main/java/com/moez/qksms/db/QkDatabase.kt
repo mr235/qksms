@@ -48,12 +48,11 @@ import com.moez.qksms.db.entity.ScheduledMessageRecipientEntity
 import com.moez.qksms.db.entity.SyncLogEntity
 
 /**
- * Room replacement for the Realm default instance configured in
- * `presentation/common/QKApplication.kt`.
+ * The app's persistent store: messages and MMS parts, conversations and their recipients,
+ * contacts and phone numbers, contact groups, scheduled messages, blocked numbers and
+ * notifications, and the sync log.
  *
- * Table structure mirrors the 11 Realm model classes 1:1 (see the Realm→Room migration plan);
- * this is version 1 because there is no prior Room schema to migrate from — the one-time
- * RealmToRoomMigrator (Phase 3) populates these tables from the existing .realm file.
+ * `version = 1` is the initial schema.
  */
 @Database(
     entities = [

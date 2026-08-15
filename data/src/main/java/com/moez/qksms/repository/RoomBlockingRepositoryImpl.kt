@@ -30,11 +30,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Room-backed [BlockingRepository]. Mirrors [BlockingRepositoryImpl] semantics.
+ * Room-backed [BlockingRepository].
  *
- * `isBlocked` / `unblockNumbers` still read the full number list and filter in memory with
- * [PhoneNumberUtils.compare] — there is no SQL equivalent for that fuzzy match, so this is
- * unchanged from the Realm path (see [BlockingDao]).
+ * `isBlocked` / `unblockNumbers` read the full number list and filter in memory with
+ * [PhoneNumberUtils.compare] — there is no SQL equivalent for that fuzzy match (see [BlockingDao]).
  */
 @Singleton
 class RoomBlockingRepositoryImpl @Inject constructor(

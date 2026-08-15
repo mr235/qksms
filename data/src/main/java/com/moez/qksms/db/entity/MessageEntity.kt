@@ -26,8 +26,7 @@ import android.provider.Telephony.Sms
 /**
  * Room storage mirror of [com.moez.qksms.model.Message].
  *
- * Columns map 1:1 to the Realm schema so the migration is a straight copy. The MMS `parts`
- * relation is not stored here — it is resolved through [MmsPartEntity.messageId].
+ * The MMS `parts` relation is not stored here — it is resolved through [MmsPartEntity.messageId].
  */
 @Entity(
     tableName = "message",

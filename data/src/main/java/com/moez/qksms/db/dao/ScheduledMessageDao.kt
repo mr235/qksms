@@ -29,7 +29,7 @@ import com.moez.qksms.db.entity.ScheduledMessageRecipientEntity
 import com.moez.qksms.db.relation.ScheduledMessageFull
 import io.reactivex.Flowable
 
-/** Room translation of ScheduledMessageRepositoryImpl. */
+/** Room translation of RoomScheduledMessageRepositoryImpl. */
 @Dao
 interface ScheduledMessageDao {
 
@@ -41,7 +41,7 @@ interface ScheduledMessageDao {
     @Query("SELECT * FROM scheduled_message WHERE id = :id")
     fun getScheduledMessage(id: Long): ScheduledMessageFull?
 
-    /** ScheduledMessageRepositoryImpl generates ids via `max("id") + 1`. */
+    /** RoomScheduledMessageRepositoryImpl generates ids via `max(id) + 1`. */
     @Query("SELECT COALESCE(MAX(id), 0) FROM scheduled_message")
     fun getMaxId(): Long
 
@@ -61,10 +61,7 @@ interface ScheduledMessageDao {
     @Query("DELETE FROM scheduled_message_attachment WHERE messageId = :messageId")
     fun deleteAttachments(messageId: Long)
 
-    /**
-     * Persists a scheduled message and its ordered child rows atomically, replacing the Realm
-     * `insertOrUpdate` that cascaded the embedded RealmLists.
-     */
+    /** Persists a scheduled message and its ordered child rows atomically. */
     @Transaction
     fun save(
         message: ScheduledMessageEntity,

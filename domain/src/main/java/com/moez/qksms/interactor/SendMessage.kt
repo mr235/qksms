@@ -55,8 +55,8 @@ class SendMessage @Inject constructor(
                         params.delay)
             }
             .mapNotNull {
-                // If the threadId wasn't provided, then it's probably because it doesn't exist in Realm.
-                // Sync it now and get the id
+                // If the threadId wasn't provided, the conversation may not exist yet. Sync it now
+                // and get the id
                 when (params.threadId) {
                     0L -> conversationRepo.getOrCreateConversation(params.addresses)?.id
                     else -> params.threadId

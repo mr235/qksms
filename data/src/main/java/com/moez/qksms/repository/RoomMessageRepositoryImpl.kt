@@ -71,10 +71,10 @@ import javax.inject.Singleton
 import kotlin.math.sqrt
 
 /**
- * Room-backed [MessageRepository]. Mirrors [MessageRepositoryImpl] semantics.
+ * Room-backed [MessageRepository].
  *
  * Read operations use Room DAOs; write operations also update the native ContentProvider so the
- * system's SMS/MMS tables stay consistent (same as the Realm path).
+ * system's SMS/MMS tables stay consistent.
  */
 @Singleton
 class RoomMessageRepositoryImpl @Inject constructor(

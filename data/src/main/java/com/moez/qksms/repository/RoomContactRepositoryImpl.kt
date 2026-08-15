@@ -40,9 +40,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Room-backed [ContactRepository]. Mirrors [ContactRepositoryImpl] semantics.
+ * Room-backed [ContactRepository].
  *
- * [findContactUri] is a pure ContentResolver lookup — same across both impls, no persistence.
+ * [findContactUri] is a pure ContentResolver lookup — no persistence.
  */
 @Singleton
 class RoomContactRepositoryImpl @Inject constructor(

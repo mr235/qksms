@@ -87,8 +87,7 @@ class GalleryActivity : QkActivity(), GalleryView {
     }
 
     fun onPageSelected(position: Int) {
-        // Realm exposed the owning message via a @LinkingObjects back-reference on MmsPart; under
-        // Room the part only carries its parent's id, so resolve the message to read its date.
+        // The part only carries its parent's id, so resolve the message to read its date.
         binding.toolbarSubtitle.text = pagerAdapter.getItemOrNull(position)
                 ?.let { part -> messageRepo.getMessageForPart(part.id)?.date }
                 ?.let(dateFormatter::getDetailedTimestamp)

@@ -33,7 +33,7 @@ class UpdateScheduledMessageAlarms @Inject constructor(
         return scheduledMessageRepo.getScheduledMessages() // Get all the scheduled messages
                 .firstOrError()
                 .toFlowable()
-                .map { messages -> messages.map { message -> Pair(message.id, message.date) } } // Map the data we need out of Realm
+                .map { messages -> messages.map { message -> Pair(message.id, message.date) } } // Map out the data we need
                 .flatMap { messages -> Flowable.fromIterable(messages) } // Turn the list into a stream
                 .doOnNext { (id, date) ->
                     alarmManager.setAlarm(date, alarmManager.getScheduledMessageIntent(id)) // Create alarm

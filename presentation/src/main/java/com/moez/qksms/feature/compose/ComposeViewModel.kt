@@ -474,10 +474,8 @@ class ComposeViewModel @Inject constructor(
                 .combineLatest(
                         view.activityVisibleIntent.distinctUntilChanged(),
                         conversation.mapNotNull { conversation ->
-                            // Realm used `isValid` here to skip conversations that had been deleted
-                            // out from under the managed object. Room hands us detached copies, so
-                            // the equivalent guard is the placeholder `Conversation(0)` emitted
-                            // above while a thread is still being created.
+                            // Skip the placeholder `Conversation(0)` emitted above while a thread
+                            // is still being created.
                             conversation.takeIf { it.id != 0L }?.id
                         }.distinctUntilChanged())
                 { visible, threadId ->

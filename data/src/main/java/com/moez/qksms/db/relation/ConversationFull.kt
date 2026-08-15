@@ -32,8 +32,7 @@ import com.moez.qksms.db.entity.RecipientEntity
  * Full assembly of a [ConversationEntity] with its recipients (each with their contact and
  * phone numbers) and its last message (with its MMS parts).
  *
- * This is the Room-side equivalent of what Realm gave us for free via managed live objects —
- * one round trip yields everything the presentation layer needs to render a conversation row.
+ * One round trip yields everything the presentation layer needs to render a conversation row.
  */
 data class ConversationFull(
     @Embedded val conversation: ConversationEntity,
@@ -59,14 +58,14 @@ data class ConversationFull(
 
     /**
      * The junction rows themselves, loaded only so that [orderedRecipients] can restore the
-     * RealmList ordering — @Relation cannot project the junction's `seq` column onto
+     * stored order — @Relation cannot project the junction's `seq` column onto
      * [recipients], and conversation titles are built by joining recipient names in order.
      */
     @Relation(parentColumn = "id", entityColumn = "conversationId")
     val recipientRefs: List<ConversationRecipientCrossRef> = emptyList()
 ) {
 
-    /** Recipients in their original RealmList order. */
+    /** Recipients in their stored order. */
     fun orderedRecipients(): List<RecipientFull> {
         if (recipientRefs.isEmpty()) return recipients
 

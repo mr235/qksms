@@ -29,18 +29,18 @@ import com.moez.qksms.db.relation.ConversationFull
 import io.reactivex.Flowable
 
 /**
- * Room translation of the Conversation queries in ConversationRepositoryImpl,
- * MessageRepositoryImpl and SyncRepositoryImpl.
+ * Room translation of the Conversation queries in RoomConversationRepositoryImpl,
+ * RoomMessageRepositoryImpl and RoomSyncRepositoryImpl.
  *
- * Realm's `isNotNull("lastMessage")` becomes a LEFT JOIN with an `m.id IS NOT NULL` test rather
- * than `lastMessageId IS NOT NULL` — that way a dangling id (message deleted without the
- * conversation being updated) is treated as "no last message", matching Realm link semantics.
- * The `sort("draft", DESCENDING)` tier is kept verbatim so ordering does not shift.
+ * "Has a last message" is a LEFT JOIN with an `m.id IS NOT NULL` test rather than
+ * `lastMessageId IS NOT NULL` — that way a dangling id (message deleted without the
+ * conversation being updated) is treated as "no last message".
+ * The `draft DESC` ordering tier keeps conversations with drafts above the rest.
  */
 @Dao
 interface ConversationDao {
 
-    /** Realm getConversations(archived) — findAllAsync, so this stays reactive. */
+    /** Conversations by archived state, reactive. */
     @Transaction
     @Query(
         """
@@ -72,7 +72,7 @@ interface ConversationDao {
     )
     fun getConversationsSnapshot(archived: Boolean): List<ConversationFull>
 
-    /** Realm getTopConversations — pinned OR active in the last week. */
+    /** Top conversations — pinned OR active in the last week. */
     @Transaction
     @Query(
         """
@@ -87,7 +87,7 @@ interface ConversationDao {
     )
     fun getTopConversations(sinceDate: Long): List<ConversationFull>
 
-    /** Realm searchConversations Conversation half — filtering by body happens in MessageDao. */
+    /** Conversation half of searchConversations — filtering by body happens in MessageDao. */
     @Transaction
     @Query(
         """
@@ -121,7 +121,7 @@ interface ConversationDao {
     @Query("SELECT * FROM conversation WHERE id IN (:threadIds)")
     fun getConversations(threadIds: List<Long>): List<ConversationFull>
 
-    /** Realm getUnmanagedConversations — the `limit(5)` recents list on the compose screen. */
+    /** The `limit(5)` recents list on the compose screen. */
     @Transaction
     @Query(
         """
@@ -137,12 +137,12 @@ interface ConversationDao {
     )
     fun getRecentConversations(): Flowable<List<ConversationFull>>
 
-    /** Backs getThreadId(recipients) — Realm scanned every conversation and matched in Kotlin. */
+    /** Backs getThreadId(recipients) — the repository scans every conversation and matches in Kotlin. */
     @Transaction
     @Query("SELECT * FROM conversation")
     fun getAllConversations(): List<ConversationFull>
 
-    /** MessageRepositoryImpl.getUnreadCount — `equalTo("lastMessage.read", false)`. */
+    /** RoomMessageRepositoryImpl.getUnreadCount — counts conversations whose last message is unread. */
     @Query(
         """
         SELECT COUNT(*) FROM conversation c
@@ -152,7 +152,7 @@ interface ConversationDao {
     )
     fun getUnreadCount(): Long
 
-    /** MessageRepositoryImpl.markUnread — returns the message ids to flip to unread. */
+    /** RoomMessageRepositoryImpl.markUnread — returns the message ids to flip to unread. */
     @Query(
         """
         SELECT m.id FROM conversation c
@@ -162,7 +162,7 @@ interface ConversationDao {
     )
     fun getReadLastMessageIds(threadIds: List<Long>): List<Long>
 
-    /** SyncRepositoryImpl preserves these user-set fields across a full re-sync. */
+    /** RoomSyncRepositoryImpl preserves these user-set fields across a full re-sync. */
     @Transaction
     @Query(
         """

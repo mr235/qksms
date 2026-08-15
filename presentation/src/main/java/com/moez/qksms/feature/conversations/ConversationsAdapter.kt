@@ -128,9 +128,8 @@ class ConversationsAdapter @Inject constructor(
         return if (getItemOrNull(position)?.unread == false) 0 else 1
     }
 
-    // Under Realm, `getConversations` returned the same live objects across emissions; the default
-    // reference equality worked. Room re-materialises unmanaged `Conversation` instances on every
-    // emission, so we must key DiffUtil on the stable thread id — otherwise every refresh looks
-    // like a full replace and the list snaps back to the top.
+    // Room re-materialises unmanaged `Conversation` instances on every emission, so the default
+    // reference equality never matches — key DiffUtil on the stable thread id instead, otherwise
+    // every refresh looks like a full replace and the list snaps back to the top.
     override fun areItemsTheSame(old: Conversation, new: Conversation) = old.id == new.id
 }

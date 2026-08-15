@@ -27,11 +27,11 @@ import com.moez.qksms.db.entity.BlockedNumberEntity
 import io.reactivex.Flowable
 
 /**
- * Room translation of BlockingRepositoryImpl.
+ * Room translation of RoomBlockingRepositoryImpl.
  *
  * `isBlocked(address)` and `unblockNumbers(addresses)` are deliberately absent: they compare
- * numbers with `PhoneNumberUtils.compare`, which has no SQL equivalent, so the repository keeps
- * reading the full list and filtering in memory (unchanged from the Realm implementation).
+ * numbers with `PhoneNumberUtils.compare`, which has no SQL equivalent, so the repository reads
+ * the full list and filters in memory.
  */
 @Dao
 interface BlockingDao {

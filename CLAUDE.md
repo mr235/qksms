@@ -85,7 +85,8 @@ Cross-Activity navigation goes through `common/Navigator.kt` using plain `Intent
 
 - Model classes are in **`domain/model/`** (`Conversation`, `Message`, `MmsPart`, `Contact`, `Recipient`, `ScheduledMessage`, etc.) — plain Kotlin classes, mapped to Room entities in `data/db/entity/`. `Attachment`, `BackupFile`, `SearchResult` in the same package are transient models with no Room entity.
 - The Room database is `data/db/QkDatabase.kt`. Schema changes require bumping `@Database(version = ...)` and adding a `Migration` step.
-- `QkDatabase` currently calls `.allowMainThreadQueries()` — many UI call sites still read synchronously off the main thread (a carryover from the app's original Realm-based design); async-ifying those call sites is tracked as future work and `allowMainThreadQueries()` must stay until it's done.
+- `QkDatabase` does **not** enable `allowMainThreadQueries()` — Room's main-thread check is active. Repository methods that return a plain value (e.g. `getConversation`, `getRecipient`, `getContacts`) are synchronous and will throw if called on the main thread. Wrap them in `Single.fromCallable {}.subscribeOn(Schedulers.io())` / `Completable.fromAction {}`, or put an `observeOn(Schedulers.io())` upstream in the Rx chain, and hop back with `observeOn(AndroidSchedulers.mainThread())` before touching views. Calls made inside an `Interactor.buildObservable` are already backgrounded by `Interactor.execute()`.
+- Room's `Flowable`/`Observable` queries emit on Room's own IO executor (thread names `arch_disk_io_N`), unlike the Realm queries they replaced, which delivered on the caller's thread. Any subscription that writes to a view — including `notifyDataSetChanged()` from an adapter — needs an explicit `observeOn(AndroidSchedulers.mainThread())`.
 
 ## Conventions & gotchas
 

@@ -24,12 +24,15 @@ import com.moez.qksms.common.Navigator
 import com.moez.qksms.common.base.QkViewModel
 import com.moez.qksms.common.util.ClipboardUtils
 import com.moez.qksms.common.util.extensions.makeToast
+import com.moez.qksms.extensions.Optional
 import com.moez.qksms.interactor.SendScheduledMessage
 import com.moez.qksms.manager.BillingManager
 import com.moez.qksms.repository.ScheduledMessageRepository
 import com.uber.autodispose.android.lifecycle.scope
 import com.uber.autodispose.autoDispose
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.plusAssign
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 class ScheduledViewModel @Inject constructor(
@@ -56,19 +59,30 @@ class ScheduledViewModel @Inject constructor(
                 .subscribe { view.showMessageOptions() }
 
         view.messageMenuIntent
-                .withLatestFrom(view.messageClickIntent) { itemId, messageId ->
+                .withLatestFrom(view.messageClickIntent) { itemId, messageId -> itemId to messageId }
+                .observeOn(Schedulers.io())
+                .map { (itemId, messageId) ->
                     when (itemId) {
-                        0 -> sendScheduledMessage.execute(messageId)
-                        1 -> scheduledMessageRepo.getScheduledMessage(messageId)?.let { message ->
-                            ClipboardUtils.copy(context, message.body)
-                            context.makeToast(R.string.toast_copied)
+                        0 -> {
+                            sendScheduledMessage.execute(messageId)
+                            null
                         }
-                        2 -> scheduledMessageRepo.deleteScheduledMessage(messageId)
-                    }
-                    Unit
+                        1 -> scheduledMessageRepo.getScheduledMessage(messageId)?.body
+                        2 -> {
+                            scheduledMessageRepo.deleteScheduledMessage(messageId)
+                            null
+                        }
+                        else -> null
+                    }.let { Optional(it) }
                 }
+                .observeOn(AndroidSchedulers.mainThread())
                 .autoDispose(view.scope())
-                .subscribe()
+                .subscribe { optional ->
+                    optional.value?.let { body ->
+                        ClipboardUtils.copy(context, body)
+                        context.makeToast(R.string.toast_copied)
+                    }
+                }
 
         view.composeIntent
                 .autoDispose(view.scope())

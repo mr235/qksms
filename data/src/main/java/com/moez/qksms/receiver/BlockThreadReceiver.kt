@@ -26,6 +26,8 @@ import com.moez.qksms.interactor.MarkBlocked
 import com.moez.qksms.repository.ConversationRepository
 import com.moez.qksms.util.Preferences
 import dagger.android.AndroidInjection
+import io.reactivex.Single
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 class BlockThreadReceiver : BroadcastReceiver() {
@@ -40,13 +42,24 @@ class BlockThreadReceiver : BroadcastReceiver() {
 
         val pendingResult = goAsync()
         val threadId = intent.getLongExtra("threadId", 0)
-        val conversation = conversationRepo.getConversation(threadId)!!
-        val blockingManager = prefs.blockingManager.get()
 
-        blockingClient
-                .block(conversation.recipients.map { it.address })
-                .andThen(markBlocked.buildObservable(MarkBlocked.Params(listOf(threadId), blockingManager, null)))
-                .subscribe { pendingResult.finish() }
+        // Reading the conversation hits the database, so keep it off the main thread. An unknown
+        // threadId yields no addresses, in which case there's nothing to block.
+        Single.fromCallable {
+                    val addresses = conversationRepo.getConversation(threadId)
+                            ?.recipients
+                            ?.map { it.address }
+                            .orEmpty()
+                    Pair(addresses, prefs.blockingManager.get())
+                }
+                .subscribeOn(Schedulers.io())
+                .flatMapPublisher { (addresses, blockingManager) ->
+                    blockingClient
+                            .block(addresses)
+                            .andThen(markBlocked.buildObservable(
+                                    MarkBlocked.Params(listOf(threadId), blockingManager, null)))
+                }
+                .subscribe({ pendingResult.finish() }, { pendingResult.finish() })
     }
 
 }

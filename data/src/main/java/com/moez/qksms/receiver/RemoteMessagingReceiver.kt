@@ -28,6 +28,8 @@ import com.moez.qksms.interactor.SendMessage
 import com.moez.qksms.repository.ConversationRepository
 import com.moez.qksms.repository.MessageRepository
 import dagger.android.AndroidInjection
+import io.reactivex.Single
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 class RemoteMessagingReceiver : BroadcastReceiver() {
@@ -48,14 +50,24 @@ class RemoteMessagingReceiver : BroadcastReceiver() {
         val body = remoteInput.getCharSequence("body").toString()
         markRead.execute(listOf(threadId))
 
-        val conversation = conversationRepo.getConversation(threadId) ?: return
-        val lastMessage = conversation.lastMessage
-        val subId = subscriptionManager.activeSubscriptionInfoList
-                .firstOrNull { it.subscriptionId == lastMessage?.subId }
-                ?.subscriptionId ?: -1
-        val addresses = conversation.recipients.map { it.address }
+        val pendingResult = goAsync()
 
-        val pendingRepository = goAsync()
-        sendMessage.execute(SendMessage.Params(subId, threadId, addresses, body)) { pendingRepository.finish() }
+        // Resolving the conversation reads from the database, so keep it off the main thread.
+        Single.fromCallable {
+                    val conversation = conversationRepo.getConversation(threadId)
+                    val subId = subscriptionManager.activeSubscriptionInfoList
+                            .firstOrNull { it.subscriptionId == conversation?.lastMessage?.subId }
+                            ?.subscriptionId ?: -1
+                    Pair(subId, conversation?.recipients?.map { it.address }.orEmpty())
+                }
+                .subscribeOn(Schedulers.io())
+                .subscribe({ (subId, addresses) ->
+                    when {
+                        addresses.isEmpty() -> pendingResult.finish()
+                        else -> sendMessage.execute(SendMessage.Params(subId, threadId, addresses, body)) {
+                            pendingResult.finish()
+                        }
+                    }
+                }, { pendingResult.finish() })
     }
 }

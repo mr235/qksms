@@ -35,6 +35,7 @@ import com.moez.qksms.model.ContactGroup
 import com.moez.qksms.model.Conversation
 import com.moez.qksms.model.Recipient
 import com.moez.qksms.repository.ConversationRepository
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.subjects.PublishSubject
@@ -191,6 +192,7 @@ class ComposeItemAdapter @Inject constructor(
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
         disposables += conversationRepo.getUnmanagedRecipients()
                 .map { recipients -> recipients.associateByNotNull { recipient -> recipient.contact?.lookupKey } }
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { recipients -> this@ComposeItemAdapter.recipients = recipients }
     }
 

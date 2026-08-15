@@ -29,6 +29,7 @@ import com.moez.qksms.repository.ConversationRepository
 import com.moez.qksms.util.Preferences
 import com.uber.autodispose.android.lifecycle.scope
 import com.uber.autodispose.autoDispose
+import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.schedulers.Schedulers
@@ -104,7 +105,12 @@ class NotificationPrefsViewModel @Inject constructor(
                 .autoDispose(view.scope())
                 .subscribe {
                     when (it.id) {
-                        R.id.notificationsO -> navigator.showNotificationChannel(threadId)
+                        // Creating the channel reads the conversation from Room; run the whole trip
+                        // to Navigator off the main thread so the DB access doesn't block the UI.
+                        R.id.notificationsO -> Completable.fromAction { navigator.showNotificationChannel(threadId) }
+                                .subscribeOn(Schedulers.io())
+                                .autoDispose(view.scope())
+                                .subscribe()
 
                         R.id.notifications -> notifications.set(!notifications.get())
 

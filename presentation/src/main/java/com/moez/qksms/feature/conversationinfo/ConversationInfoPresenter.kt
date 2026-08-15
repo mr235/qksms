@@ -40,6 +40,7 @@ import com.uber.autodispose.autoDispose
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.Observables
 import io.reactivex.rxkotlin.plusAssign
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.Subject
 import javax.inject.Inject
@@ -96,7 +97,9 @@ class ConversationInfoPresenter @Inject constructor(
 
         // Add or display the contact
         view.recipientClicks()
+                .observeOn(Schedulers.io())
                 .mapNotNull(conversationRepo::getRecipient)
+                .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext { recipient ->
                     recipient.contact?.lookupKey?.let(navigator::showContact)
                             ?: navigator.addContact(recipient.address)
@@ -106,6 +109,7 @@ class ConversationInfoPresenter @Inject constructor(
 
         // Copy phone number
         view.recipientLongClicks()
+                .observeOn(Schedulers.io())
                 .mapNotNull(conversationRepo::getRecipient)
                 .map { recipient -> recipient.address }
                 .observeOn(AndroidSchedulers.mainThread())
@@ -129,6 +133,7 @@ class ConversationInfoPresenter @Inject constructor(
 
         // Set the conversation title
         view.nameChanges()
+                .observeOn(Schedulers.io())
                 .withLatestFrom(conversation) { name, conversation ->
                     conversationRepo.setConversationName(conversation.id, name)
                 }

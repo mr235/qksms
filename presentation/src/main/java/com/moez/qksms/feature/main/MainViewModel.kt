@@ -23,6 +23,7 @@ import com.moez.qksms.R
 import com.moez.qksms.common.Navigator
 import com.moez.qksms.common.base.QkViewModel
 import com.moez.qksms.db.dao.SyncLogDao
+import com.moez.qksms.extensions.Optional
 import com.moez.qksms.extensions.mapNotNull
 import com.moez.qksms.interactor.DeleteConversations
 import com.moez.qksms.interactor.MarkAllSeen
@@ -45,6 +46,7 @@ import com.moez.qksms.repository.SyncRepository
 import com.moez.qksms.util.Preferences
 import com.uber.autodispose.android.lifecycle.scope
 import com.uber.autodispose.autoDispose
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.schedulers.Schedulers
@@ -53,6 +55,7 @@ import io.reactivex.subjects.Subject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -131,11 +134,16 @@ class MainViewModel @Inject constructor(
 
 
         // If we have all permissions and we've never run a sync, run a sync. This will be the case
-        // when upgrading from 2.7.3, or if the app's data was cleared
-        val lastSync = syncLogDao.getLatestSyncDate()
-        if (lastSync == 0L && permissionManager.isDefaultSms() && permissionManager.hasReadSms() && permissionManager.hasContacts()) {
-            syncMessages.execute(Unit)
-        }
+        // when upgrading from 2.7.3, or if the app's data was cleared. Reading the sync log hits the
+        // database, so keep it off the main thread — the ViewModel is constructed during onCreate.
+        disposables += Single.fromCallable { syncLogDao.getLatestSyncDate() }
+                .subscribeOn(Schedulers.io())
+                .subscribe({ lastSync ->
+                    if (lastSync == 0L && permissionManager.isDefaultSms() &&
+                            permissionManager.hasReadSms() && permissionManager.hasContacts()) {
+                        syncMessages.execute(Unit)
+                    }
+                }, { error -> Timber.w(error) })
 
         // Sync contacts when we detect a change
         if (permissionManager.hasContacts()) {
@@ -372,9 +380,11 @@ class MainViewModel @Inject constructor(
                 .doOnNext { view.clearSelection() }
                 .filter { conversations -> conversations.size == 1 }
                 .map { conversations -> conversations.first() }
+                .observeOn(Schedulers.io())
                 .mapNotNull(conversationRepo::getConversation)
                 .map { conversation -> conversation.recipients }
                 .mapNotNull { recipients -> recipients[0]?.address?.takeIf { recipients.size == 1 } }
+                .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext(navigator::addContact)
                 .autoDispose(view.scope())
                 .subscribe()
@@ -445,7 +455,8 @@ class MainViewModel @Inject constructor(
                 .subscribe { ratingManager.dismiss() }
 
         view.conversationsSelectedIntent
-                .withLatestFrom(state) { selection, state ->
+                .observeOn(Schedulers.io())
+                .map { selection ->
                     val conversations = selection.mapNotNull(conversationRepo::getConversation)
                     val add = conversations.firstOrNull()
                             ?.takeIf { conversations.size == 1 }
@@ -455,23 +466,34 @@ class MainViewModel @Inject constructor(
                     val pin = conversations.sumBy { if (it.pinned) -1 else 1 } >= 0
                     val read = conversations.sumBy { if (!it.unread) -1 else 1 } >= 0
                     val selected = selection.size
-
+                    SelectionSummary(add, pin, read, selected)
+                }
+                .observeOn(AndroidSchedulers.mainThread())
+                .withLatestFrom(state) { summary, state -> summary to state }
+                .autoDispose(view.scope())
+                .subscribe { (summary, state) ->
                     when (state.page) {
                         is Inbox -> {
-                            val page = state.page.copy(addContact = add, markPinned = pin, markRead = read, selected = selected)
+                            val page = state.page.copy(
+                                    addContact = summary.add,
+                                    markPinned = summary.pin,
+                                    markRead = summary.read,
+                                    selected = summary.selected)
                             newState { copy(page = page) }
                         }
 
                         is Archived -> {
-                            val page = state.page.copy(addContact = add, markPinned = pin, markRead = read, selected = selected)
+                            val page = state.page.copy(
+                                    addContact = summary.add,
+                                    markPinned = summary.pin,
+                                    markRead = summary.read,
+                                    selected = summary.selected)
                             newState { copy(page = page) }
                         }
 
                         is Searching -> {} // Ignore
                     }
                 }
-                .autoDispose(view.scope())
-                .subscribe()
 
         // Delete the conversation
         view.confirmDeleteIntent
@@ -489,7 +511,13 @@ class MainViewModel @Inject constructor(
                         Preferences.SWIPE_ACTION_ARCHIVE -> markArchived.execute(listOf(threadId)) { view.showArchivedSnackbar() }
                         Preferences.SWIPE_ACTION_DELETE -> view.showDeleteDialog(listOf(threadId))
                         Preferences.SWIPE_ACTION_BLOCK -> view.showBlockingDialog(listOf(threadId), true)
-                        Preferences.SWIPE_ACTION_CALL -> conversationRepo.getConversation(threadId)?.recipients?.firstOrNull()?.address?.let(navigator::makePhoneCall)
+                        Preferences.SWIPE_ACTION_CALL -> Single.fromCallable {
+                                    Optional(conversationRepo.getConversation(threadId)?.recipients?.firstOrNull()?.address)
+                                }
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .autoDispose(view.scope())
+                                .subscribe { optional -> optional.value?.let(navigator::makePhoneCall) }
                         Preferences.SWIPE_ACTION_READ -> markRead.execute(listOf(threadId))
                         Preferences.SWIPE_ACTION_UNREAD -> markUnread.execute(listOf(threadId))
                     }
@@ -519,5 +547,16 @@ class MainViewModel @Inject constructor(
                 .autoDispose(view.scope())
                 .subscribe()
     }
+
+    /**
+     * Aggregated properties of the current conversation selection, computed off the main thread so
+     * that the underlying database reads don't block the UI.
+     */
+    private data class SelectionSummary(
+        val add: Boolean,
+        val pin: Boolean,
+        val read: Boolean,
+        val selected: Int
+    )
 
 }

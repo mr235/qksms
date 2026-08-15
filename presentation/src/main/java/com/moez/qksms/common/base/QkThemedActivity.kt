@@ -42,6 +42,7 @@ import com.uber.autodispose.autoDispose
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.Observables
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.Subject
 import java.util.concurrent.TimeUnit
@@ -70,9 +71,13 @@ abstract class QkThemedActivity : QkActivity() {
     /**
      * Switch the theme if the threadId changes
      * Set it based on the latest message in the conversation
+     *
+     * The conversation/message lookups hit the database, so they run on the IO scheduler; the
+     * result is delivered back on the main thread because every subscriber tints views with it.
      */
     val theme: Observable<Colors.Theme> = threadId
             .distinctUntilChanged()
+            .observeOn(Schedulers.io())
             .switchMap { threadId ->
                 val conversation = conversationRepo.getConversation(threadId)
                 when {
@@ -95,6 +100,7 @@ abstract class QkThemedActivity : QkActivity() {
                 }
             }
             .switchMap { colors.themeObservable(it.value) }
+            .observeOn(AndroidSchedulers.mainThread())
 
     @SuppressLint("InlinedApi")
     override fun onCreate(savedInstanceState: Bundle?) {

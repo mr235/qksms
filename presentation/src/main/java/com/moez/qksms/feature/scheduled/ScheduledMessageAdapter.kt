@@ -33,8 +33,13 @@ import com.moez.qksms.model.Recipient
 import com.moez.qksms.model.ScheduledMessage
 import com.moez.qksms.repository.ContactRepository
 import com.moez.qksms.util.PhoneNumberUtils
+import io.reactivex.Single
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
+import timber.log.Timber
 import javax.inject.Inject
 
 class ScheduledMessageAdapter @Inject constructor(
@@ -44,7 +49,8 @@ class ScheduledMessageAdapter @Inject constructor(
     private val phoneNumberUtils: PhoneNumberUtils
 ) : QkListAdapter<ScheduledMessage, ScheduledMessageListItemBinding>() {
 
-    private val contacts by lazy { contactRepo.getContacts() }
+    private var contacts: List<Contact> = emptyList()
+    private var contactsDisposable: Disposable? = null
     private val contactCache = ContactCache()
     private val imagesViewPool = RecyclerView.RecycledViewPool()
 
@@ -87,6 +93,31 @@ class ScheduledMessageAdapter @Inject constructor(
     // Room re-materialises unmanaged instances on every emission, so the inherited reference
     // equality never matches and DiffUtil would report a full replace. Key on the primary key.
     override fun areItemsTheSame(old: ScheduledMessage, new: ScheduledMessage) = old.id == new.id
+
+    /**
+     * Loading the contact list queries the database, which used to happen lazily from
+     * [onBindViewHolder] and therefore on the main thread. Fetch it once off the main thread when
+     * the list is attached instead, and rebind afterwards so the resolved names show up.
+     */
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+
+        contactsDisposable = Single.fromCallable { contactRepo.getContacts() }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ contacts ->
+                    this.contacts = contacts
+                    contactCache.clear()
+                    notifyDataSetChanged()
+                }, { error -> Timber.w(error) })
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+
+        contactsDisposable?.dispose()
+        contactsDisposable = null
+    }
 
     /**
      * Cache the contacts in a map by the address, because the messages we're binding don't have

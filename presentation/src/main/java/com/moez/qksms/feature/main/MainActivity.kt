@@ -141,8 +141,12 @@ class MainActivity : QkThemedActivity(), MainView {
 
         binding.syncing.setOnInflateListener { _, inflated ->
             syncingBinding = MainSyncingBinding.bind(inflated)
-            syncingBinding?.syncingProgress?.progressTintList = ColorStateList.valueOf(theme.blockingFirst().theme)
-            syncingBinding?.syncingProgress?.indeterminateTintList = ColorStateList.valueOf(theme.blockingFirst().theme)
+            // theme is now async (Room reads on IO), so use the synchronous colors.theme() here
+            // — this inflate listener runs on the main thread and only needs the initial color
+            // for a threadId of 0 (drawer / no conversation), which colors.theme() gives directly.
+            val initial = colors.theme().theme
+            syncingBinding?.syncingProgress?.progressTintList = ColorStateList.valueOf(initial)
+            syncingBinding?.syncingProgress?.indeterminateTintList = ColorStateList.valueOf(initial)
         }
 
         toggle.syncState()

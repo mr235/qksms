@@ -48,4 +48,8 @@ class BlockedNumbersAdapter : QkListAdapter<BlockedNumber, BlockedNumberListItem
         holder.binding.number.text = item.address
     }
 
+    // Room re-materialises unmanaged instances on every emission, so the inherited reference
+    // equality never matches and DiffUtil would report a full replace. Key on the primary key.
+    override fun areItemsTheSame(old: BlockedNumber, new: BlockedNumber) = old.id == new.id
+
 }

@@ -320,6 +320,10 @@ class MessagesAdapter @Inject constructor(
         }
     }
 
+    // Room re-materialises unmanaged instances on every emission, so the inherited reference
+    // equality never matches and DiffUtil would report a full replace. Key on the primary key.
+    override fun areItemsTheSame(old: Message, new: Message) = old.id == new.id
+
     /**
      * Cache the contacts in a map by the address, because the messages we're binding don't have
      * a reference to the contact.

@@ -133,4 +133,8 @@ class GalleryPagerAdapter @Inject constructor(private val context: Context) : Qk
         exoPlayers.forEach { exoPlayer -> exoPlayer?.release() }
     }
 
+    // Room re-materialises unmanaged instances on every emission, so the inherited reference
+    // equality never matches and DiffUtil would report a full replace. Key on the primary key.
+    override fun areItemsTheSame(old: MmsPart, new: MmsPart) = old.id == new.id
+
 }

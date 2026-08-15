@@ -94,4 +94,8 @@ class BlockedMessagesAdapter @Inject constructor(
         return if (conversation?.unread == false) 1 else 0
     }
 
+    // Room re-materialises unmanaged instances on every emission, so the inherited reference
+    // equality never matches and DiffUtil would report a full replace. Key on the primary key.
+    override fun areItemsTheSame(old: Conversation, new: Conversation) = old.id == new.id
+
 }

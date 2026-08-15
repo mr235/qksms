@@ -35,4 +35,8 @@ class BlockedMessagesNotificationAdapter : QkListAdapter<BlockedMessageNotificat
 
         holder.binding.content.text = item.content
     }
+
+    // Room re-materialises unmanaged instances on every emission, so the inherited reference
+    // equality never matches and DiffUtil would report a full replace. Key on the primary key.
+    override fun areItemsTheSame(old: BlockedMessageNotification, new: BlockedMessageNotification) = old.id == new.id
 }

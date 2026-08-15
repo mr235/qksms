@@ -19,11 +19,12 @@
 package com.moez.qksms.repository
 
 import com.moez.qksms.extensions.anyOf
+import com.moez.qksms.extensions.asFlowableList
 import com.moez.qksms.model.BlockedMessageNotification
 import com.moez.qksms.model.BlockedNumber
 import com.moez.qksms.util.PhoneNumberUtils
+import io.reactivex.Flowable
 import io.realm.Realm
-import io.realm.RealmResults
 import javax.inject.Inject
 
 class BlockingRepositoryImpl @Inject constructor(
@@ -50,16 +51,18 @@ class BlockingRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getBlockedNumbers(): RealmResults<BlockedNumber> {
-        return Realm.getDefaultInstance()
-                .where(BlockedNumber::class.java)
+    override fun getBlockedNumbers(): Flowable<List<BlockedNumber>> {
+        val realm = Realm.getDefaultInstance()
+        return realm.where(BlockedNumber::class.java)
                 .findAllAsync()
+                .asFlowableList(realm)
     }
 
-    override fun getBlockedMessagesNotification(): RealmResults<BlockedMessageNotification> {
-        return Realm.getDefaultInstance()
-            .where(BlockedMessageNotification::class.java)
-            .findAllAsync()
+    override fun getBlockedMessagesNotification(): Flowable<List<BlockedMessageNotification>> {
+        val realm = Realm.getDefaultInstance()
+        return realm.where(BlockedMessageNotification::class.java)
+                .findAllAsync()
+                .asFlowableList(realm)
     }
 
     override fun getBlockedNotificationContents(): List<String> {

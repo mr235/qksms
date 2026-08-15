@@ -26,16 +26,20 @@ import com.moez.qksms.interactor.DeleteConversations
 import com.moez.qksms.repository.ConversationRepository
 import com.uber.autodispose.android.lifecycle.scope
 import com.uber.autodispose.autoDispose
+import io.reactivex.rxkotlin.plusAssign
 import javax.inject.Inject
 
 class BlockedMessagesPresenter @Inject constructor(
-    conversationRepo: ConversationRepository,
+    private val conversationRepo: ConversationRepository,
     private val blockingClient: BlockingClient,
     private val deleteConversations: DeleteConversations,
     private val navigator: Navigator
-) : QkPresenter<BlockedMessagesView, BlockedMessagesState>(BlockedMessagesState(
-        data = conversationRepo.getBlockedConversationsAsync()
-)) {
+) : QkPresenter<BlockedMessagesView, BlockedMessagesState>(BlockedMessagesState()) {
+
+    init {
+        disposables += conversationRepo.getBlockedConversationsAsync()
+                .subscribe { conversations -> newState { copy(data = conversations) } }
+    }
 
     override fun bindIntents(view: BlockedMessagesView) {
         super.bindIntents(view)

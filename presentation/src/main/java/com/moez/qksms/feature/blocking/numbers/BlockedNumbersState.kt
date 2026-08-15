@@ -19,8 +19,7 @@
 package com.moez.qksms.feature.blocking.numbers
 
 import com.moez.qksms.model.BlockedNumber
-import io.realm.RealmResults
 
 data class BlockedNumbersState(
-    val numbers: RealmResults<BlockedNumber>? = null
+    val numbers: List<BlockedNumber>? = null
 )

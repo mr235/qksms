@@ -34,7 +34,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 import com.jakewharton.rxbinding3.view.clicks
 import com.moez.qksms.R
-import com.moez.qksms.common.base.QkRealmAdapter
+import com.moez.qksms.common.base.QkListAdapter
 import com.moez.qksms.common.base.QkViewHolder
 import com.moez.qksms.common.util.Colors
 import com.moez.qksms.common.util.DateFormatter
@@ -63,7 +63,6 @@ import com.moez.qksms.util.PhoneNumberUtils
 import com.moez.qksms.util.Preferences
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
-import io.realm.RealmResults
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -78,7 +77,7 @@ class MessagesAdapter @Inject constructor(
     private val phoneNumberUtils: PhoneNumberUtils,
     private val prefs: Preferences,
     private val textViewStyler: TextViewStyler
-) : QkRealmAdapter<Message, ViewBinding>() {
+) : QkListAdapter<Message, ViewBinding>() {
 
     companion object {
         private const val VIEW_TYPE_MESSAGE_IN = 0
@@ -95,21 +94,21 @@ class MessagesAdapter @Inject constructor(
     val partClicks: Subject<Long> = PublishSubject.create()
     val cancelSending: Subject<Long> = PublishSubject.create()
 
-    var data: Pair<Conversation, RealmResults<Message>>? = null
+    var messages: Pair<Conversation, List<Message>>? = null
         set(value) {
             if (field === value) return
 
             field = value
             contactCache.clear()
 
-            updateData(value?.second)
+            super.updateData(value?.second)
         }
 
     /**
      * Safely return the conversation, if available
      */
     private val conversation: Conversation?
-        get() = data?.first?.takeIf { it.isValid }
+        get() = messages?.first
 
     /**
      * Mark this message as highlighted
@@ -158,7 +157,7 @@ class MessagesAdapter @Inject constructor(
 
         return QkViewHolder(binding).apply {
             itemView.setOnClickListener {
-                val message = getItem(adapterPosition) ?: return@setOnClickListener
+                val message = getItemOrNull(adapterPosition) ?: return@setOnClickListener
                 when (toggleSelection(message.id, false)) {
                     true -> itemView.isActivated = isSelected(message.id)
                     false -> {
@@ -169,7 +168,7 @@ class MessagesAdapter @Inject constructor(
                 }
             }
             itemView.setOnLongClickListener {
-                val message = getItem(adapterPosition) ?: return@setOnLongClickListener true
+                val message = getItemOrNull(adapterPosition) ?: return@setOnLongClickListener true
                 toggleSelection(message.id)
                 itemView.isActivated = isSelected(message.id)
                 true
@@ -178,9 +177,9 @@ class MessagesAdapter @Inject constructor(
     }
 
     override fun onBindViewHolder(holder: QkViewHolder<ViewBinding>, position: Int) {
-        val message = getItem(position) ?: return
-        val previous = if (position == 0) null else getItem(position - 1)
-        val next = if (position == itemCount - 1) null else getItem(position + 1)
+        val message = getItemOrNull(position) ?: return
+        val previous = if (position == 0) null else getItemOrNull(position - 1)
+        val next = if (position == itemCount - 1) null else getItemOrNull(position + 1)
 
         val theme = when (message.isOutgoingMessage()) {
             true -> colors.theme()
@@ -314,7 +313,7 @@ class MessagesAdapter @Inject constructor(
     }
 
     override fun getItemViewType(position: Int): Int {
-        val message = getItem(position) ?: return -1
+        val message = getItemOrNull(position) ?: return -1
         return when (message.isMe()) {
             true -> VIEW_TYPE_MESSAGE_OUT
             false -> VIEW_TYPE_MESSAGE_IN
@@ -328,11 +327,11 @@ class MessagesAdapter @Inject constructor(
     private inner class ContactCache : HashMap<String, Recipient?>() {
 
         override fun get(key: String): Recipient? {
-            if (super.get(key)?.isValid != true) {
+            if (super.get(key) == null) {
                 set(key, conversation?.recipients?.firstOrNull { phoneNumberUtils.compare(it.address, key) })
             }
 
-            return super.get(key)?.takeIf { it.isValid }
+            return super.get(key)
         }
 
     }

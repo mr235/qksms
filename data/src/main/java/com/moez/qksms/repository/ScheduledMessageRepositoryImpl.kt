@@ -18,10 +18,11 @@
  */
 package com.moez.qksms.repository
 
+import com.moez.qksms.extensions.asFlowableList
 import com.moez.qksms.model.ScheduledMessage
+import io.reactivex.Flowable
 import io.realm.Realm
 import io.realm.RealmList
-import io.realm.RealmResults
 import javax.inject.Inject
 
 class ScheduledMessageRepositoryImpl @Inject constructor() : ScheduledMessageRepository {
@@ -46,11 +47,12 @@ class ScheduledMessageRepositoryImpl @Inject constructor() : ScheduledMessageRep
         }
     }
 
-    override fun getScheduledMessages(): RealmResults<ScheduledMessage> {
-        return Realm.getDefaultInstance()
-                .where(ScheduledMessage::class.java)
+    override fun getScheduledMessages(): Flowable<List<ScheduledMessage>> {
+        val realm = Realm.getDefaultInstance()
+        return realm.where(ScheduledMessage::class.java)
                 .sort("date")
-                .findAll()
+                .findAllAsync()
+                .asFlowableList(realm)
     }
 
     override fun getScheduledMessage(id: Long): ScheduledMessage? {

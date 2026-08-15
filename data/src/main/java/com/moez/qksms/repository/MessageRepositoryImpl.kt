@@ -45,6 +45,7 @@ import com.klinker.android.send_message.Transaction
 import com.moez.qksms.common.util.extensions.now
 import com.moez.qksms.compat.TelephonyCompat
 import com.moez.qksms.extensions.anyOf
+import com.moez.qksms.extensions.asFlowableList
 import com.moez.qksms.extensions.isImage
 import com.moez.qksms.extensions.isVideo
 import com.moez.qksms.manager.ActiveConversationManager
@@ -60,9 +61,9 @@ import com.moez.qksms.util.ImageUtils
 import com.moez.qksms.util.PhoneNumberUtils
 import com.moez.qksms.util.Preferences
 import com.moez.qksms.util.tryOrNull
+import io.reactivex.Flowable
 import io.realm.Case
 import io.realm.Realm
-import io.realm.RealmResults
 import io.realm.Sort
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -81,9 +82,9 @@ class MessageRepositoryImpl @Inject constructor(
     private val syncRepository: SyncRepository
 ) : MessageRepository {
 
-    override fun getMessages(threadId: Long, query: String): RealmResults<Message> {
-        return Realm.getDefaultInstance()
-                .where(Message::class.java)
+    override fun getMessages(threadId: Long, query: String): Flowable<List<Message>> {
+        val realm = Realm.getDefaultInstance()
+        return realm.where(Message::class.java)
                 .equalTo("threadId", threadId)
                 .let {
                     when (query.isEmpty()) {
@@ -98,6 +99,7 @@ class MessageRepositoryImpl @Inject constructor(
                 }
                 .sort("date")
                 .findAllAsync()
+                .asFlowableList(realm)
     }
 
     override fun getMessage(id: Long): Message? {
@@ -115,9 +117,9 @@ class MessageRepositoryImpl @Inject constructor(
                 .findFirst()
     }
 
-    override fun getLastIncomingMessage(threadId: Long): RealmResults<Message> {
-        return Realm.getDefaultInstance()
-                .where(Message::class.java)
+    override fun getLastIncomingMessage(threadId: Long): Flowable<List<Message>> {
+        val realm = Realm.getDefaultInstance()
+        return realm.where(Message::class.java)
                 .equalTo("threadId", threadId)
                 .beginGroup()
                 .beginGroup()
@@ -131,7 +133,8 @@ class MessageRepositoryImpl @Inject constructor(
                 .endGroup()
                 .endGroup()
                 .sort("date", Sort.DESCENDING)
-                .findAll()
+                .findAllAsync()
+                .asFlowableList(realm)
     }
 
     override fun getUnreadCount(): Long {
@@ -152,9 +155,9 @@ class MessageRepositoryImpl @Inject constructor(
                 .findFirst()
     }
 
-    override fun getPartsForConversation(threadId: Long): RealmResults<MmsPart> {
-        return Realm.getDefaultInstance()
-                .where(MmsPart::class.java)
+    override fun getPartsForConversation(threadId: Long): Flowable<List<MmsPart>> {
+        val realm = Realm.getDefaultInstance()
+        return realm.where(MmsPart::class.java)
                 .equalTo("messages.threadId", threadId)
                 .beginGroup()
                 .contains("type", "image/")
@@ -163,6 +166,7 @@ class MessageRepositoryImpl @Inject constructor(
                 .endGroup()
                 .sort("id", Sort.DESCENDING)
                 .findAllAsync()
+                .asFlowableList(realm)
     }
 
     override fun savePart(id: Long): Uri? {
@@ -218,24 +222,37 @@ class MessageRepositoryImpl @Inject constructor(
      * Retrieves the list of messages which should be shown in the notification
      * for a given conversation
      */
-    override fun getUnreadUnseenMessages(threadId: Long): RealmResults<Message> {
-        return Realm.getDefaultInstance()
-                .also { it.refresh() }
-                .where(Message::class.java)
-                .equalTo("seen", false)
-                .equalTo("read", false)
-                .equalTo("threadId", threadId)
-                .sort("date")
-                .findAll()
+    override fun getUnreadUnseenMessages(threadId: Long): List<Message> {
+        return Realm.getDefaultInstance().use { realm ->
+            realm.refresh()
+            realm.copyFromRealm(realm.where(Message::class.java)
+                    .equalTo("seen", false)
+                    .equalTo("read", false)
+                    .equalTo("threadId", threadId)
+                    .sort("date")
+                    .findAll())
+        }
     }
 
-    override fun getUnreadMessages(threadId: Long): RealmResults<Message> {
-        return Realm.getDefaultInstance()
-                .where(Message::class.java)
+    override fun getUnreadMessages(threadId: Long): Flowable<List<Message>> {
+        val realm = Realm.getDefaultInstance()
+        return realm.where(Message::class.java)
                 .equalTo("read", false)
                 .equalTo("threadId", threadId)
                 .sort("date")
-                .findAll()
+                .findAllAsync()
+                .asFlowableList(realm)
+    }
+
+    override fun getUnreadMessagesSnapshot(threadId: Long): List<Message> {
+        return Realm.getDefaultInstance().use { realm ->
+            realm.refresh()
+            realm.copyFromRealm(realm.where(Message::class.java)
+                    .equalTo("read", false)
+                    .equalTo("threadId", threadId)
+                    .sort("date")
+                    .findAll())
+        }
     }
 
     override fun markAllSeen() {

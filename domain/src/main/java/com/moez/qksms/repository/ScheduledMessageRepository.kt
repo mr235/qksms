@@ -19,7 +19,7 @@
 package com.moez.qksms.repository
 
 import com.moez.qksms.model.ScheduledMessage
-import io.realm.RealmResults
+import io.reactivex.Flowable
 
 interface ScheduledMessageRepository {
 
@@ -38,7 +38,7 @@ interface ScheduledMessageRepository {
     /**
      * Returns all of the scheduled messages, sorted chronologically
      */
-    fun getScheduledMessages(): RealmResults<ScheduledMessage>
+    fun getScheduledMessages(): Flowable<List<ScheduledMessage>>
 
     /**
      * Returns the scheduled message with the given [id]

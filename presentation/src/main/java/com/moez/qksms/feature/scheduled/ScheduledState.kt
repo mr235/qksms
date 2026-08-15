@@ -19,9 +19,8 @@
 package com.moez.qksms.feature.scheduled
 
 import com.moez.qksms.model.ScheduledMessage
-import io.realm.RealmResults
 
 data class ScheduledState(
-    val scheduledMessages: RealmResults<ScheduledMessage>? = null,
+    val scheduledMessages: List<ScheduledMessage>? = null,
     val upgraded: Boolean = false
 )

@@ -85,11 +85,11 @@ class GalleryActivity : QkActivity(), GalleryView {
     }
 
     fun onPageSelected(position: Int) {
-        binding.toolbarSubtitle.text = pagerAdapter.getItem(position)?.messages?.firstOrNull()?.date
+        binding.toolbarSubtitle.text = pagerAdapter.getItemOrNull(position)?.messages?.firstOrNull()?.date
                 ?.let(dateFormatter::getDetailedTimestamp)
         binding.toolbarSubtitle.isVisible = binding.toolbarTitle.text.isNotBlank()
 
-        pagerAdapter.getItem(position)?.run(pageChangedSubject::onNext)
+        pagerAdapter.getItemOrNull(position)?.run(pageChangedSubject::onNext)
     }
 
     override fun render(state: GalleryState) {

@@ -90,6 +90,17 @@ class Preferences @Inject constructor(
     @Deprecated("This should only be accessed when migrating to @blockingManager")
     val sia = rxPrefs.getBoolean("sia", false)
 
+    /**
+     * Routes the repository layer at Room instead of Realm. Off by default — the Realm
+     * implementations stay authoritative until the migration has been validated. Flipping this on
+     * requires [realmMigrationDone] to be true, otherwise the Room tables are empty.
+     */
+    val useRoomStorage = rxPrefs.getBoolean("useRoomStorage", false)
+
+    /** Set once [com.moez.qksms.migration.RealmToRoomMigrator] has copied every table across. */
+    val realmMigrationDone = rxPrefs.getBoolean("realmMigrationDone", false)
+
+
     // User configurable
     val sendAsGroup = rxPrefs.getBoolean("sendAsGroup", true)
     val nightMode = rxPrefs.getInteger("nightMode", when (Build.VERSION.SDK_INT >= 29) {

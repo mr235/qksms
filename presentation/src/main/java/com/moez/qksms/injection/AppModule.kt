@@ -31,6 +31,16 @@ import com.moez.qksms.common.ViewModelFactory
 import com.moez.qksms.common.util.BillingManagerImpl
 import com.moez.qksms.common.util.NotificationManagerImpl
 import com.moez.qksms.common.util.ShortcutManagerImpl
+import com.moez.qksms.db.QkDatabase
+import com.moez.qksms.db.dao.BlockingDao
+import com.moez.qksms.db.dao.ContactDao
+import com.moez.qksms.db.dao.ContactGroupDao
+import com.moez.qksms.db.dao.ConversationDao
+import com.moez.qksms.db.dao.MessageDao
+import com.moez.qksms.db.dao.MmsPartDao
+import com.moez.qksms.db.dao.RecipientDao
+import com.moez.qksms.db.dao.ScheduledMessageDao
+import com.moez.qksms.db.dao.SyncLogDao
 import com.moez.qksms.feature.conversationinfo.injection.ConversationInfoComponent
 import com.moez.qksms.feature.themepicker.injection.ThemePickerComponent
 import com.moez.qksms.listener.ContactAddedListener
@@ -80,14 +90,23 @@ import com.moez.qksms.repository.ConversationRepository
 import com.moez.qksms.repository.ConversationRepositoryImpl
 import com.moez.qksms.repository.MessageRepository
 import com.moez.qksms.repository.MessageRepositoryImpl
+import com.moez.qksms.repository.RoomBackupRepositoryImpl
+import com.moez.qksms.repository.RoomBlockingRepositoryImpl
+import com.moez.qksms.repository.RoomContactRepositoryImpl
+import com.moez.qksms.repository.RoomConversationRepositoryImpl
+import com.moez.qksms.repository.RoomMessageRepositoryImpl
+import com.moez.qksms.repository.RoomScheduledMessageRepositoryImpl
+import com.moez.qksms.repository.RoomSyncRepositoryImpl
 import com.moez.qksms.repository.ScheduledMessageRepository
 import com.moez.qksms.repository.ScheduledMessageRepositoryImpl
 import com.moez.qksms.repository.SyncRepository
 import com.moez.qksms.repository.SyncRepositoryImpl
+import com.moez.qksms.util.Preferences
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module(subcomponents = [
@@ -124,6 +143,22 @@ class AppModule(private var application: Application) {
 
     @Provides
     fun provideViewModelFactory(factory: ViewModelFactory): ViewModelProvider.Factory = factory
+
+    // Room database
+
+    @Provides
+    @Singleton
+    fun provideQkDatabase(context: Context): QkDatabase = QkDatabase.getInstance(context)
+
+    @Provides fun provideMessageDao(db: QkDatabase): MessageDao = db.messageDao()
+    @Provides fun provideMmsPartDao(db: QkDatabase): MmsPartDao = db.mmsPartDao()
+    @Provides fun provideConversationDao(db: QkDatabase): ConversationDao = db.conversationDao()
+    @Provides fun provideRecipientDao(db: QkDatabase): RecipientDao = db.recipientDao()
+    @Provides fun provideContactDao(db: QkDatabase): ContactDao = db.contactDao()
+    @Provides fun provideContactGroupDao(db: QkDatabase): ContactGroupDao = db.contactGroupDao()
+    @Provides fun provideScheduledMessageDao(db: QkDatabase): ScheduledMessageDao = db.scheduledMessageDao()
+    @Provides fun provideBlockingDao(db: QkDatabase): BlockingDao = db.blockingDao()
+    @Provides fun provideSyncLogDao(db: QkDatabase): SyncLogDao = db.syncLogDao()
 
     // Listener
 
@@ -195,26 +230,65 @@ class AppModule(private var application: Application) {
     fun provideCursorToRecipient(mapper: CursorToRecipientImpl): CursorToRecipient = mapper
 
     // Repository
+    //
+    // Two implementations of each repository coexist during the Realm → Room migration. The
+    // `useRoomStorage` preference picks between them at graph-construction time. Both are injected
+    // as Providers so only the selected implementation is ever instantiated.
 
     @Provides
-    fun provideBackupRepository(repository: BackupRepositoryImpl): BackupRepository = repository
+    @Singleton
+    fun provideBackupRepository(
+        prefs: Preferences,
+        realm: Provider<BackupRepositoryImpl>,
+        room: Provider<RoomBackupRepositoryImpl>
+    ): BackupRepository = if (prefs.useRoomStorage.get()) room.get() else realm.get()
 
     @Provides
-    fun provideBlockingRepository(repository: BlockingRepositoryImpl): BlockingRepository = repository
+    @Singleton
+    fun provideBlockingRepository(
+        prefs: Preferences,
+        realm: Provider<BlockingRepositoryImpl>,
+        room: Provider<RoomBlockingRepositoryImpl>
+    ): BlockingRepository = if (prefs.useRoomStorage.get()) room.get() else realm.get()
 
     @Provides
-    fun provideContactRepository(repository: ContactRepositoryImpl): ContactRepository = repository
+    @Singleton
+    fun provideContactRepository(
+        prefs: Preferences,
+        realm: Provider<ContactRepositoryImpl>,
+        room: Provider<RoomContactRepositoryImpl>
+    ): ContactRepository = if (prefs.useRoomStorage.get()) room.get() else realm.get()
 
     @Provides
-    fun provideConversationRepository(repository: ConversationRepositoryImpl): ConversationRepository = repository
+    @Singleton
+    fun provideConversationRepository(
+        prefs: Preferences,
+        realm: Provider<ConversationRepositoryImpl>,
+        room: Provider<RoomConversationRepositoryImpl>
+    ): ConversationRepository = if (prefs.useRoomStorage.get()) room.get() else realm.get()
 
     @Provides
-    fun provideMessageRepository(repository: MessageRepositoryImpl): MessageRepository = repository
+    @Singleton
+    fun provideMessageRepository(
+        prefs: Preferences,
+        realm: Provider<MessageRepositoryImpl>,
+        room: Provider<RoomMessageRepositoryImpl>
+    ): MessageRepository = if (prefs.useRoomStorage.get()) room.get() else realm.get()
 
     @Provides
-    fun provideScheduledMessagesRepository(repository: ScheduledMessageRepositoryImpl): ScheduledMessageRepository = repository
+    @Singleton
+    fun provideScheduledMessagesRepository(
+        prefs: Preferences,
+        realm: Provider<ScheduledMessageRepositoryImpl>,
+        room: Provider<RoomScheduledMessageRepositoryImpl>
+    ): ScheduledMessageRepository = if (prefs.useRoomStorage.get()) room.get() else realm.get()
 
     @Provides
-    fun provideSyncRepository(repository: SyncRepositoryImpl): SyncRepository = repository
+    @Singleton
+    fun provideSyncRepository(
+        prefs: Preferences,
+        realm: Provider<SyncRepositoryImpl>,
+        room: Provider<RoomSyncRepositoryImpl>
+    ): SyncRepository = if (prefs.useRoomStorage.get()) room.get() else realm.get()
 
 }

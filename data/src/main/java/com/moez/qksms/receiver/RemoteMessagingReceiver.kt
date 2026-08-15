@@ -48,11 +48,12 @@ class RemoteMessagingReceiver : BroadcastReceiver() {
         val body = remoteInput.getCharSequence("body").toString()
         markRead.execute(listOf(threadId))
 
-        val lastMessage = messageRepo.getMessages(threadId).lastOrNull()
+        val conversation = conversationRepo.getConversation(threadId) ?: return
+        val lastMessage = conversation.lastMessage
         val subId = subscriptionManager.activeSubscriptionInfoList
                 .firstOrNull { it.subscriptionId == lastMessage?.subId }
                 ?.subscriptionId ?: -1
-        val addresses = conversationRepo.getConversation(threadId)?.recipients?.map { it.address } ?: return
+        val addresses = conversation.recipients.map { it.address }
 
         val pendingRepository = goAsync()
         sendMessage.execute(SendMessage.Params(subId, threadId, addresses, body)) { pendingRepository.finish() }

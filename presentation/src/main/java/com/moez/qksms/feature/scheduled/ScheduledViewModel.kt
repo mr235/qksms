@@ -38,11 +38,12 @@ class ScheduledViewModel @Inject constructor(
     private val navigator: Navigator,
     private val scheduledMessageRepo: ScheduledMessageRepository,
     private val sendScheduledMessage: SendScheduledMessage
-) : QkViewModel<ScheduledView, ScheduledState>(ScheduledState(
-        scheduledMessages = scheduledMessageRepo.getScheduledMessages()
-)) {
+) : QkViewModel<ScheduledView, ScheduledState>(ScheduledState()) {
 
     init {
+        disposables += scheduledMessageRepo.getScheduledMessages()
+                .subscribe { messages -> newState { copy(scheduledMessages = messages) } }
+
         disposables += billingManager.upgradeStatus
                 .subscribe { upgraded -> newState { copy(upgraded = upgraded) } }
     }

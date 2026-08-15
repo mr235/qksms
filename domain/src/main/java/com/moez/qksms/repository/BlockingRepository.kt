@@ -20,15 +20,15 @@ package com.moez.qksms.repository
 
 import com.moez.qksms.model.BlockedMessageNotification
 import com.moez.qksms.model.BlockedNumber
-import io.realm.RealmResults
+import io.reactivex.Flowable
 
 interface BlockingRepository {
 
     fun blockNumber(vararg addresses: String)
 
-    fun getBlockedNumbers(): RealmResults<BlockedNumber>
+    fun getBlockedNumbers(): Flowable<List<BlockedNumber>>
 
-    fun getBlockedMessagesNotification(): RealmResults<BlockedMessageNotification>
+    fun getBlockedMessagesNotification(): Flowable<List<BlockedMessageNotification>>
 
     fun getBlockedNotificationContents(): List<String>
 

@@ -212,7 +212,7 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
         binding.sendAsGroupSwitch.isChecked = state.sendAsGroup
 
         binding.messageList.setVisible(!state.editingMode || state.sendAsGroup || state.selectedChips.size == 1)
-        messageAdapter.data = state.messages
+        messageAdapter.messages = state.messages
         messageAdapter.highlight = state.searchSelectionId
 
         binding.scheduledGroup.isVisible = state.scheduled != 0L
@@ -329,7 +329,7 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
     }
 
     override fun scrollToMessage(id: Long) {
-        messageAdapter.data?.second
+        messageAdapter.messages?.second
                 ?.indexOfLast { message -> message.id == id }
                 ?.takeIf { position -> position != -1 }
                 ?.let(binding.messageList::scrollToPosition)

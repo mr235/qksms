@@ -24,7 +24,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import com.moez.qksms.R
-import com.moez.qksms.common.base.QkRealmAdapter
+import com.moez.qksms.common.base.QkListAdapter
 import com.moez.qksms.common.base.QkViewHolder
 import com.moez.qksms.common.util.DateFormatter
 import com.moez.qksms.common.util.extensions.resolveThemeColor
@@ -37,7 +37,7 @@ import javax.inject.Inject
 class BlockedMessagesAdapter @Inject constructor(
     private val context: Context,
     private val dateFormatter: DateFormatter
-) : QkRealmAdapter<Conversation, BlockedListItemBinding>() {
+) : QkListAdapter<Conversation, BlockedListItemBinding>() {
 
     val clicks: PublishSubject<Long> = PublishSubject.create()
 
@@ -53,14 +53,14 @@ class BlockedMessagesAdapter @Inject constructor(
 
         return QkViewHolder(binding).apply {
             binding.root.setOnClickListener {
-                val conversation = getItem(adapterPosition) ?: return@setOnClickListener
+                val conversation = getItemOrNull(adapterPosition) ?: return@setOnClickListener
                 when (toggleSelection(conversation.id, false)) {
                     true -> binding.root.isActivated = isSelected(conversation.id)
                     false -> clicks.onNext(conversation.id)
                 }
             }
             binding.root.setOnLongClickListener {
-                val conversation = getItem(adapterPosition) ?: return@setOnLongClickListener true
+                val conversation = getItemOrNull(adapterPosition) ?: return@setOnLongClickListener true
                 toggleSelection(conversation.id)
                 binding.root.isActivated = isSelected(conversation.id)
                 true
@@ -69,7 +69,7 @@ class BlockedMessagesAdapter @Inject constructor(
     }
 
     override fun onBindViewHolder(holder: QkViewHolder<BlockedListItemBinding>, position: Int) {
-        val conversation = getItem(position) ?: return
+        val conversation = getItemOrNull(position) ?: return
 
         holder.containerView.isActivated = isSelected(conversation.id)
 
@@ -90,7 +90,7 @@ class BlockedMessagesAdapter @Inject constructor(
     }
 
     override fun getItemViewType(position: Int): Int {
-        val conversation = getItem(position)
+        val conversation = getItemOrNull(position)
         return if (conversation?.unread == false) 1 else 0
     }
 

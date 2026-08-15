@@ -21,7 +21,6 @@ package com.moez.qksms.feature.main
 import com.moez.qksms.model.Conversation
 import com.moez.qksms.model.SearchResult
 import com.moez.qksms.repository.SyncRepository
-import io.realm.RealmResults
 
 data class MainState(
     val page: MainPage = Inbox(),
@@ -41,7 +40,7 @@ data class Inbox(
     val addContact: Boolean = false,
     val markPinned: Boolean = true,
     val markRead: Boolean = false,
-    val data: RealmResults<Conversation>? = null,
+    val data: List<Conversation>? = null,
     val selected: Int = 0
 ) : MainPage()
 
@@ -54,6 +53,6 @@ data class Archived(
     val addContact: Boolean = false,
     val markPinned: Boolean = true,
     val markRead: Boolean = false,
-    val data: RealmResults<Conversation>? = null,
+    val data: List<Conversation>? = null,
     val selected: Int = 0
 ) : MainPage()

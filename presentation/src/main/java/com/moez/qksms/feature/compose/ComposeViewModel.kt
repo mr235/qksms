@@ -115,7 +115,7 @@ class ComposeViewModel @Inject constructor(
     init {
         val initialConversation = threadId.takeIf { it != 0L }
                 ?.let(conversationRepo::getConversationAsync)
-                ?.asObservable()
+                ?.toObservable()
                 ?: Observable.empty()
 
         val selectedConversation = selectedChips
@@ -128,37 +128,29 @@ class ComposeViewModel @Inject constructor(
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnNext { newState { copy(loading = false) } }
                 .switchMap { (threadId, addresses) ->
-                    // If we already have this thread in realm, or we're able to obtain it from the
+                    // If we already have this thread in the DB, or we're able to obtain it from the
                     // system, just return that.
                     threadId.takeIf { it > 0 }?.let {
-                        return@switchMap conversationRepo.getConversationAsync(threadId).asObservable()
+                        return@switchMap conversationRepo.getConversationAsync(threadId).toObservable()
                     }
 
                     // Otherwise, we'll monitor the conversations until our expected conversation is created
-                    conversationRepo.getConversations().asObservable()
-                            .filter { it.isLoaded }
+                    conversationRepo.getConversations().toObservable()
                             .observeOn(Schedulers.io())
                             .map { conversationRepo.getOrCreateConversation(addresses)?.id ?: 0 }
                             .observeOn(AndroidSchedulers.mainThread())
                             .switchMap { actualThreadId ->
                                 when (actualThreadId) {
                                     0L -> Observable.just(Conversation(0))
-                                    else -> conversationRepo.getConversationAsync(actualThreadId).asObservable()
+                                    else -> conversationRepo.getConversationAsync(actualThreadId).toObservable()
                                 }
                             }
                 }
 
         // Merges two potential conversation sources (threadId from constructor and contact selection) into a single
-        // stream of conversations. If the conversation was deleted, notify the activity to shut down
+        // stream of conversations.
         disposables += selectedConversation
                 .mergeWith(initialConversation)
-                .filter { conversation -> conversation.isLoaded }
-                .doOnNext { conversation ->
-                    if (!conversation.isValid) {
-                        newState { copy(hasError = true) }
-                    }
-                }
-                .filter { conversation -> conversation.isValid }
                 .subscribe(conversation::onNext)
 
         if (addresses.isNotEmpty()) {
@@ -176,12 +168,12 @@ class ComposeViewModel @Inject constructor(
         disposables += conversation
                 .distinctUntilChanged { conversation -> conversation.id }
                 .observeOn(AndroidSchedulers.mainThread())
-                .map { conversation ->
-                    val messages = messageRepo.getMessages(conversation.id)
-                    newState { copy(threadId = conversation.id, messages = Pair(conversation, messages)) }
-                    messages
+                .switchMap { conversation ->
+                    messageRepo.getMessages(conversation.id).toObservable()
+                            .doOnNext { list ->
+                                newState { copy(threadId = conversation.id, messages = Pair(conversation, list)) }
+                            }
                 }
-                .switchMap { messages -> messages.asObservable() }
                 .subscribe(messages::onNext)
 
         disposables += conversation
@@ -200,10 +192,8 @@ class ComposeViewModel @Inject constructor(
                 .map { conversation -> conversation.id }
                 .distinctUntilChanged()
                 .withLatestFrom(state) { id, state -> messageRepo.getMessages(id, state.query) }
-                .switchMap { messages -> messages.asObservable() }
+                .switchMap { messages -> messages.toObservable() }
                 .takeUntil(state.map { it.query }.filter { it.isEmpty() })
-                .filter { messages -> messages.isLoaded }
-                .filter { messages -> messages.isValid }
                 .subscribe(searchResults::onNext)
 
         disposables += Observables.combineLatest(searchSelection, searchResults) { selected, messages ->

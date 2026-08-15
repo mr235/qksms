@@ -22,23 +22,23 @@ import android.net.Uri
 import com.moez.qksms.model.Attachment
 import com.moez.qksms.model.Message
 import com.moez.qksms.model.MmsPart
-import io.realm.RealmResults
+import io.reactivex.Flowable
 
 interface MessageRepository {
 
-    fun getMessages(threadId: Long, query: String = ""): RealmResults<Message>
+    fun getMessages(threadId: Long, query: String = ""): Flowable<List<Message>>
 
     fun getMessage(id: Long): Message?
 
     fun getMessageForPart(id: Long): Message?
 
-    fun getLastIncomingMessage(threadId: Long): RealmResults<Message>
+    fun getLastIncomingMessage(threadId: Long): Flowable<List<Message>>
 
     fun getUnreadCount(): Long
 
     fun getPart(id: Long): MmsPart?
 
-    fun getPartsForConversation(threadId: Long): RealmResults<MmsPart>
+    fun getPartsForConversation(threadId: Long): Flowable<List<MmsPart>>
 
     fun savePart(id: Long): Uri?
 
@@ -46,13 +46,18 @@ interface MessageRepository {
      * Retrieves the list of messages which should be shown in the notification
      * for a given conversation
      */
-    fun getUnreadUnseenMessages(threadId: Long): RealmResults<Message>
+    fun getUnreadUnseenMessages(threadId: Long): List<Message>
 
     /**
      * Retrieves the list of messages which should be shown in the quickreply popup
      * for a given conversation
      */
-    fun getUnreadMessages(threadId: Long): RealmResults<Message>
+    fun getUnreadMessages(threadId: Long): Flowable<List<Message>>
+
+    /**
+     * Snapshot version of [getUnreadMessages] for one-shot reads (e.g. delete before shutdown).
+     */
+    fun getUnreadMessagesSnapshot(threadId: Long): List<Message>
 
     fun markAllSeen()
 

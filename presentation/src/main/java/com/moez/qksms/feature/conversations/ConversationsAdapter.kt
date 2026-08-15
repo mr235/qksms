@@ -27,7 +27,7 @@ import androidx.core.text.color
 import androidx.core.view.isVisible
 import com.moez.qksms.R
 import com.moez.qksms.common.Navigator
-import com.moez.qksms.common.base.QkRealmAdapter
+import com.moez.qksms.common.base.QkListAdapter
 import com.moez.qksms.common.base.QkViewHolder
 import com.moez.qksms.common.util.Colors
 import com.moez.qksms.common.util.DateFormatter
@@ -44,7 +44,7 @@ class ConversationsAdapter @Inject constructor(
     private val dateFormatter: DateFormatter,
     private val navigator: Navigator,
     private val phoneNumberUtils: PhoneNumberUtils
-) : QkRealmAdapter<Conversation, ConversationListItemBinding>() {
+) : QkListAdapter<Conversation, ConversationListItemBinding>() {
 
     init {
         // This is how we access the threadId for the swipe actions
@@ -72,14 +72,14 @@ class ConversationsAdapter @Inject constructor(
 
         return QkViewHolder(binding).apply {
             itemView.setOnClickListener {
-                val conversation = getItem(adapterPosition) ?: return@setOnClickListener
+                val conversation = getItemOrNull(adapterPosition) ?: return@setOnClickListener
                 when (toggleSelection(conversation.id, false)) {
                     true -> itemView.isActivated = isSelected(conversation.id)
                     false -> navigator.showConversation(conversation.id)
                 }
             }
             itemView.setOnLongClickListener {
-                val conversation = getItem(adapterPosition) ?: return@setOnLongClickListener true
+                val conversation = getItemOrNull(adapterPosition) ?: return@setOnLongClickListener true
                 toggleSelection(conversation.id)
                 itemView.isActivated = isSelected(conversation.id)
                 true
@@ -88,7 +88,7 @@ class ConversationsAdapter @Inject constructor(
     }
 
     override fun onBindViewHolder(holder: QkViewHolder<ConversationListItemBinding>, position: Int) {
-        val conversation = getItem(position) ?: return
+        val conversation = getItemOrNull(position) ?: return
 
         // If the last message wasn't incoming, then the colour doesn't really matter anyway
         val lastMessage = conversation.lastMessage
@@ -121,10 +121,10 @@ class ConversationsAdapter @Inject constructor(
     }
 
     override fun getItemId(position: Int): Long {
-        return getItem(position)?.id ?: -1
+        return getItemOrNull(position)?.id ?: -1
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (getItem(position)?.unread == false) 0 else 1
+        return if (getItemOrNull(position)?.unread == false) 0 else 1
     }
 }

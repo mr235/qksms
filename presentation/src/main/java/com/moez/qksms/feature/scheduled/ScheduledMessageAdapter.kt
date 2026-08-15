@@ -24,7 +24,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import com.moez.qksms.common.base.QkRealmAdapter
+import com.moez.qksms.common.base.QkListAdapter
 import com.moez.qksms.common.base.QkViewHolder
 import com.moez.qksms.common.util.DateFormatter
 import com.moez.qksms.databinding.ScheduledMessageListItemBinding
@@ -42,7 +42,7 @@ class ScheduledMessageAdapter @Inject constructor(
     private val contactRepo: ContactRepository,
     private val dateFormatter: DateFormatter,
     private val phoneNumberUtils: PhoneNumberUtils
-) : QkRealmAdapter<ScheduledMessage, ScheduledMessageListItemBinding>() {
+) : QkListAdapter<ScheduledMessage, ScheduledMessageListItemBinding>() {
 
     private val contacts by lazy { contactRepo.getContacts() }
     private val contactCache = ContactCache()
@@ -59,14 +59,14 @@ class ScheduledMessageAdapter @Inject constructor(
 
         return QkViewHolder(binding).apply {
             containerView.setOnClickListener {
-                val message = getItem(adapterPosition) ?: return@setOnClickListener
+                val message = getItemOrNull(adapterPosition) ?: return@setOnClickListener
                 clicks.onNext(message.id)
             }
         }
     }
 
     override fun onBindViewHolder(holder: QkViewHolder<ScheduledMessageListItemBinding>, position: Int) {
-        val message = getItem(position) ?: return
+        val message = getItemOrNull(position) ?: return
         val binding = holder.binding
 
         // GroupAvatarView only accepts recipients, so map the phone numbers to recipients
@@ -91,7 +91,7 @@ class ScheduledMessageAdapter @Inject constructor(
     private inner class ContactCache : HashMap<String, Contact?>() {
 
         override fun get(key: String): Contact? {
-            if (super.get(key)?.isValid != true) {
+            if (super.get(key) == null) {
                 set(key, contacts.firstOrNull { contact ->
                     contact.numbers.any {
                         phoneNumberUtils.compare(it.address, key)
@@ -99,7 +99,7 @@ class ScheduledMessageAdapter @Inject constructor(
                 })
             }
 
-            return super.get(key)?.takeIf { it.isValid }
+            return super.get(key)
         }
 
     }

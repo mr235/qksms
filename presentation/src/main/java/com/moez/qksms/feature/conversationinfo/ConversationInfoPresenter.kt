@@ -25,7 +25,6 @@ import com.moez.qksms.common.Navigator
 import com.moez.qksms.common.base.QkPresenter
 import com.moez.qksms.common.util.ClipboardUtils
 import com.moez.qksms.common.util.extensions.makeToast
-import com.moez.qksms.extensions.asObservable
 import com.moez.qksms.extensions.mapNotNull
 import com.moez.qksms.feature.conversationinfo.ConversationInfoItem.ConversationInfoMedia
 import com.moez.qksms.feature.conversationinfo.ConversationInfoItem.ConversationInfoRecipient
@@ -64,14 +63,7 @@ class ConversationInfoPresenter @Inject constructor(
 
     init {
         disposables += conversationRepo.getConversationAsync(threadId)
-                .asObservable()
-                .filter { conversation -> conversation.isLoaded }
-                .doOnNext { conversation ->
-                    if (!conversation.isValid) {
-                        newState { copy(hasError = true) }
-                    }
-                }
-                .filter { conversation -> conversation.isValid }
+                .toObservable()
                 .filter { conversation -> conversation.id != 0L }
                 .subscribe(conversation::onNext)
 
@@ -82,14 +74,9 @@ class ConversationInfoPresenter @Inject constructor(
         disposables += Observables
                 .combineLatest(
                         conversation,
-                        messageRepo.getPartsForConversation(threadId).asObservable()
+                        messageRepo.getPartsForConversation(threadId).toObservable()
                 ) { conversation, parts ->
                     val data = mutableListOf<ConversationInfoItem>()
-
-                    // If some data was deleted, this isn't the place to handle it
-                    if (!conversation.isLoaded || !conversation.isValid || !parts.isLoaded || !parts.isValid) {
-                        return@combineLatest
-                    }
 
                     data += conversation.recipients.map(::ConversationInfoRecipient)
                     data += ConversationInfoItem.ConversationInfoSettings(

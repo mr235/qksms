@@ -19,9 +19,8 @@
 package com.moez.qksms.feature.blocking.messages
 
 import com.moez.qksms.model.Conversation
-import io.realm.RealmResults
 
 data class BlockedMessagesState(
-    val data: RealmResults<Conversation>? = null,
+    val data: List<Conversation>? = null,
     val selected: Int = 0
 )

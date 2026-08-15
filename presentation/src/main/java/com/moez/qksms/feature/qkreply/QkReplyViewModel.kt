@@ -23,7 +23,6 @@ import com.moez.qksms.R
 import com.moez.qksms.common.Navigator
 import com.moez.qksms.common.base.QkViewModel
 import com.moez.qksms.compat.SubscriptionManagerCompat
-import com.moez.qksms.extensions.asObservable
 import com.moez.qksms.extensions.mapNotNull
 import com.moez.qksms.interactor.DeleteMessages
 import com.moez.qksms.interactor.MarkRead
@@ -39,7 +38,6 @@ import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.Subject
-import io.realm.RealmResults
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Named
@@ -57,18 +55,30 @@ class QkReplyViewModel @Inject constructor(
 
     private val conversation by lazy {
         conversationRepo.getConversationAsync(threadId)
-                .asObservable()
-                .filter { it.isLoaded }
-                .filter { it.isValid }
+                .toObservable()
                 .distinctUntilChanged()
     }
 
-    private val messages: Subject<RealmResults<Message>> =
-            BehaviorSubject.createDefault(messageRepo.getUnreadMessages(threadId))
+    /**
+     * `true` shows every message in the thread, `false` shows only the unread ones. Each emission
+     * resubscribes [messages] to the matching repository stream.
+     */
+    private val expanded: Subject<Boolean> = BehaviorSubject.createDefault(false)
+
+    private val messages: Subject<List<Message>> = BehaviorSubject.create()
 
     init {
         disposables += markRead
         disposables += sendMessage
+
+        disposables += expanded
+                .switchMap { expanded ->
+                    when (expanded) {
+                        true -> messageRepo.getMessages(threadId).toObservable()
+                        false -> messageRepo.getUnreadMessages(threadId).toObservable()
+                    }
+                }
+                .subscribe(messages::onNext)
 
         // When the set of messages changes, update the state
         // If we're ever showing an empty set of messages, then it's time to shut down to activity
@@ -77,10 +87,7 @@ class QkReplyViewModel @Inject constructor(
                     newState { copy(data = Pair(conversation, messages)) }
                     messages
                 }
-                .switchMap { messages -> messages.asObservable() }
-                .filter { it.isLoaded }
-                .filter { it.isValid }
-                .filter { it.isEmpty() }
+                .filter { messages -> messages.isEmpty() }
                 .subscribe { newState { copy(hasError = true) } }
 
         disposables += conversation
@@ -128,16 +135,14 @@ class QkReplyViewModel @Inject constructor(
         // Show all messages
         view.menuItemIntent
                 .filter { id -> id == R.id.expand }
-                .map { messageRepo.getMessages(threadId) }
-                .doOnNext(messages::onNext)
+                .doOnNext { expanded.onNext(true) }
                 .autoDispose(view.scope())
                 .subscribe { newState { copy(expanded = true) } }
 
         // Show unread messages only
         view.menuItemIntent
                 .filter { id -> id == R.id.collapse }
-                .map { messageRepo.getUnreadMessages(threadId) }
-                .doOnNext(messages::onNext)
+                .doOnNext { expanded.onNext(false) }
                 .autoDispose(view.scope())
                 .subscribe { newState { copy(expanded = false) } }
 
@@ -145,7 +150,7 @@ class QkReplyViewModel @Inject constructor(
         view.menuItemIntent
                 .filter { id -> id == R.id.delete }
                 .observeOn(Schedulers.io())
-                .map { messageRepo.getUnreadMessages(threadId).map { it.id } }
+                .map { messageRepo.getUnreadMessagesSnapshot(threadId).map { it.id } }
                 .map { messages -> DeleteMessages.Params(messages, threadId) }
                 .autoDispose(view.scope())
                 .subscribe { deleteMessages.execute(it) { newState { copy(hasError = true) } } }

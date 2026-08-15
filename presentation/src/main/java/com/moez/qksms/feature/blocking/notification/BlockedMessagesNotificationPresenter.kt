@@ -6,6 +6,7 @@ import com.moez.qksms.common.util.extensions.makeToast
 import com.moez.qksms.repository.BlockingRepository
 import com.uber.autodispose.android.lifecycle.scope
 import com.uber.autodispose.autoDispose
+import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
@@ -13,8 +14,13 @@ class BlockedMessagesNotificationPresenter @Inject constructor(
     private val blockingRepo: BlockingRepository,
     private val context: Context) :
     QkPresenter<BlockedMessagesNotificationView, BlockedMessagesNotificationState>(
-        BlockedMessagesNotificationState(blockingRepo.getBlockedMessagesNotification())
+        BlockedMessagesNotificationState()
     ) {
+
+    init {
+        disposables += blockingRepo.getBlockedMessagesNotification()
+                .subscribe { messages -> newState { copy(messages = messages) } }
+    }
 
     override fun bindIntents(view: BlockedMessagesNotificationView) {
         super.bindIntents(view)

@@ -48,6 +48,8 @@ import com.uber.autodispose.autoDispose
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.plusAssign
 import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.BehaviorSubject
+import io.reactivex.subjects.Subject
 import io.realm.Realm
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -77,7 +79,14 @@ class MainViewModel @Inject constructor(
     private val ratingManager: RatingManager,
     private val syncContacts: SyncContacts,
     private val syncMessages: SyncMessages
-) : QkViewModel<MainView, MainState>(MainState(page = Inbox(data = conversationRepo.getConversations()))) {
+) : QkViewModel<MainView, MainState>(MainState(page = Inbox())) {
+
+    /**
+     * Emits whenever the visible conversation list should be (re)loaded. `true` loads the archived
+     * conversations, `false` loads the inbox. Every emission resubscribes to the repository, which
+     * causes a fresh list to be pushed into the state.
+     */
+    private val loadConversations: Subject<Boolean> = BehaviorSubject.createDefault(false)
 
     init {
         disposables += deleteConversations
@@ -87,6 +96,20 @@ class MainViewModel @Inject constructor(
         disposables += migratePreferences
         disposables += syncContacts
         disposables += syncMessages
+
+        // Keep the conversation list in the state up to date
+        disposables += loadConversations
+                .switchMap { archived -> conversationRepo.getConversations(archived).toObservable() }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { conversations ->
+                    newState {
+                        copy(page = when (page) {
+                            is Inbox -> page.copy(data = conversations)
+                            is Archived -> page.copy(data = conversations)
+                            else -> page
+                        })
+                    }
+                }
 
         // Show the syncing UI
         disposables += syncRepository.syncProgress
@@ -219,7 +242,8 @@ class MainViewModel @Inject constructor(
                 .observeOn(AndroidSchedulers.mainThread())
                 .withLatestFrom(state) { query, state ->
                     if (query.isEmpty() && state.page is Searching) {
-                        newState { copy(page = Inbox(data = conversationRepo.getConversations())) }
+                        newState { copy(page = Inbox()) }
+                        loadConversations.onNext(false)
                     }
                     query
                 }
@@ -282,7 +306,8 @@ class MainViewModel @Inject constructor(
                             state.page is Inbox && state.page.selected > 0 -> view.clearSelection()
                             state.page is Archived && state.page.selected > 0 -> view.clearSelection()
                             state.page !is Inbox -> {
-                                newState { copy(page = Inbox(data = conversationRepo.getConversations())) }
+                                newState { copy(page = Inbox()) }
+                                loadConversations.onNext(false)
                             }
                             else -> view.moveToBack()
                         }
@@ -300,8 +325,14 @@ class MainViewModel @Inject constructor(
                 .distinctUntilChanged()
                 .doOnNext { drawerItem ->
                     when (drawerItem) {
-                        NavItem.INBOX -> newState { copy(page = Inbox(data = conversationRepo.getConversations())) }
-                        NavItem.ARCHIVED -> newState { copy(page = Archived(data = conversationRepo.getConversations(true))) }
+                        NavItem.INBOX -> {
+                            newState { copy(page = Inbox()) }
+                            loadConversations.onNext(false)
+                        }
+                        NavItem.ARCHIVED -> {
+                            newState { copy(page = Archived()) }
+                            loadConversations.onNext(true)
+                        }
                         else -> Unit
                     }
                 }

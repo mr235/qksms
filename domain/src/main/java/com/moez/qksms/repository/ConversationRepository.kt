@@ -21,12 +21,12 @@ package com.moez.qksms.repository
 import com.moez.qksms.model.Conversation
 import com.moez.qksms.model.Recipient
 import com.moez.qksms.model.SearchResult
+import io.reactivex.Flowable
 import io.reactivex.Observable
-import io.realm.RealmResults
 
 interface ConversationRepository {
 
-    fun getConversations(archived: Boolean = false): RealmResults<Conversation>
+    fun getConversations(archived: Boolean = false): Flowable<List<Conversation>>
 
     fun getConversationsSnapshot(): List<Conversation>
 
@@ -39,22 +39,22 @@ interface ConversationRepository {
 
     fun searchConversations(query: CharSequence): List<SearchResult>
 
-    fun getBlockedConversations(): RealmResults<Conversation>
+    fun getBlockedConversations(): List<Conversation>
 
-    fun getBlockedConversationsAsync(): RealmResults<Conversation>
+    fun getBlockedConversationsAsync(): Flowable<List<Conversation>>
 
-    fun getConversationAsync(threadId: Long): Conversation
+    fun getConversationAsync(threadId: Long): Flowable<Conversation>
 
     fun getConversation(threadId: Long): Conversation?
 
     /**
      * Returns all conversations with an id in [threadIds]
      */
-    fun getConversations(vararg threadIds: Long): RealmResults<Conversation>
+    fun getConversations(vararg threadIds: Long): List<Conversation>
 
     fun getUnmanagedConversations(): Observable<List<Conversation>>
 
-    fun getRecipients(): RealmResults<Recipient>
+    fun getRecipients(): List<Recipient>
 
     fun getUnmanagedRecipients(): Observable<List<Recipient>>
 

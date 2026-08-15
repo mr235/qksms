@@ -28,7 +28,7 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.mms.ContentType
-import com.moez.qksms.common.base.QkRealmAdapter
+import com.moez.qksms.common.base.QkListAdapter
 import com.moez.qksms.common.base.QkViewHolder
 import com.moez.qksms.databinding.GalleryImagePageBinding
 import com.moez.qksms.databinding.GalleryInvalidPageBinding
@@ -41,7 +41,7 @@ import io.reactivex.subjects.Subject
 import java.util.*
 import javax.inject.Inject
 
-class GalleryPagerAdapter @Inject constructor(private val context: Context) : QkRealmAdapter<MmsPart, ViewBinding>() {
+class GalleryPagerAdapter @Inject constructor(private val context: Context) : QkListAdapter<MmsPart, ViewBinding>() {
 
     companion object {
         private const val VIEW_TYPE_INVALID = 0
@@ -87,7 +87,7 @@ class GalleryPagerAdapter @Inject constructor(private val context: Context) : Qk
     }
 
     override fun onBindViewHolder(holder: QkViewHolder<ViewBinding>, position: Int) {
-        val part = getItem(position) ?: return
+        val part = getItemOrNull(position) ?: return
         when (getItemViewType(position)) {
             VIEW_TYPE_IMAGE -> {
                 val binding = holder.binding as GalleryImagePageBinding
@@ -121,7 +121,7 @@ class GalleryPagerAdapter @Inject constructor(private val context: Context) : Qk
     }
 
     override fun getItemViewType(position: Int): Int {
-        val part = getItem(position)
+        val part = getItemOrNull(position)
         return when {
             part?.isImage() == true -> VIEW_TYPE_IMAGE
             part?.isVideo() == true -> VIEW_TYPE_VIDEO

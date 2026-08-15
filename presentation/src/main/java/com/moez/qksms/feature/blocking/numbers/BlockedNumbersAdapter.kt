@@ -20,14 +20,14 @@ package com.moez.qksms.feature.blocking.numbers
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import com.moez.qksms.common.base.QkRealmAdapter
+import com.moez.qksms.common.base.QkListAdapter
 import com.moez.qksms.common.base.QkViewHolder
 import com.moez.qksms.databinding.BlockedNumberListItemBinding
 import com.moez.qksms.model.BlockedNumber
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 
-class BlockedNumbersAdapter : QkRealmAdapter<BlockedNumber, BlockedNumberListItemBinding>() {
+class BlockedNumbersAdapter : QkListAdapter<BlockedNumber, BlockedNumberListItemBinding>() {
 
     val unblockAddress: Subject<Long> = PublishSubject.create()
 
@@ -36,14 +36,14 @@ class BlockedNumbersAdapter : QkRealmAdapter<BlockedNumber, BlockedNumberListIte
         val binding = BlockedNumberListItemBinding.inflate(layoutInflater, parent, false)
         return QkViewHolder(binding).apply {
             binding.unblock.setOnClickListener {
-                val number = getItem(adapterPosition) ?: return@setOnClickListener
+                val number = getItemOrNull(adapterPosition) ?: return@setOnClickListener
                 unblockAddress.onNext(number.id)
             }
         }
     }
 
     override fun onBindViewHolder(holder: QkViewHolder<BlockedNumberListItemBinding>, position: Int) {
-        val item = getItem(position)!!
+        val item = getItem(position)
 
         holder.binding.number.text = item.address
     }

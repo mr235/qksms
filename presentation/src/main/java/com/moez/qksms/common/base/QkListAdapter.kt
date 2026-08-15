@@ -1,0 +1,61 @@
+/*
+ * Copyright (C) 2017 Moez Bhatti <moez.bhatti@gmail.com>
+ *
+ * This file is part of QKSMS.
+ *
+ * QKSMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * QKSMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with QKSMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package com.moez.qksms.common.base
+
+import androidx.viewbinding.ViewBinding
+import com.moez.qksms.common.util.extensions.setVisible
+import timber.log.Timber
+
+/**
+ * Replacement for the Realm-backed `QkRealmAdapter`.
+ *
+ * Realm's `RealmRecyclerViewAdapter` diffed live `RealmResults` for us; with plain lists coming out
+ * of the repositories we lean on [QkAdapter]'s `DiffUtil` pass instead. The API surface is kept
+ * deliberately close to the old one — [updateData] accepts a nullable list so existing render code
+ * (`adapter.updateData(state.foo)`) keeps compiling, and [getItemOrNull] preserves the tolerant
+ * index handling that view holders relied on when a row was rebound mid-update.
+ */
+abstract class QkListAdapter<T, VB : ViewBinding> : QkAdapter<T, VB>() {
+
+    /**
+     * The empty view should only appear once we've actually received data. Realm gave us
+     * `isLoaded` for this; here we simply wait for the first [updateData] call.
+     */
+    private var loaded = false
+
+    fun updateData(data: List<T>?) {
+        loaded = loaded || data != null
+        this.data = data ?: listOf()
+        emptyView?.setVisible(loaded && this.data.isEmpty())
+    }
+
+    /**
+     * Null-safe counterpart to [getItem], for the same reason the Realm adapter had one: view
+     * holder callbacks can fire with a stale adapter position.
+     */
+    fun getItemOrNull(position: Int): T? {
+        if (position < 0) {
+            Timber.w("Only indexes >= 0 are allowed. Input was: $position")
+            return null
+        }
+
+        return data.getOrNull(position)
+    }
+
+}

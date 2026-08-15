@@ -18,7 +18,9 @@
  */
 package com.moez.qksms.extensions
 
+import io.reactivex.Flowable
 import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.realm.Realm
 import io.realm.RealmModel
 import io.realm.RealmObject
@@ -43,6 +45,19 @@ fun <T : RealmObject> T.asObservable(): Observable<T> {
 
 fun <T : RealmObject> RealmResults<T>.asObservable(): Observable<RealmResults<T>> {
     return asFlowable().toObservable()
+}
+
+/**
+ * Bridges a live [RealmResults] to a [Flowable] of unmanaged copies, mirroring the shape the new
+ * repository contracts expose (`Flowable<List<T>>`). The [realm] instance must stay open for the
+ * lifetime of the subscription, so callers keep it at method scope exactly like the existing
+ * `getUnmanaged*` helpers do.
+ */
+fun <T : RealmObject> RealmResults<T>.asFlowableList(realm: Realm): Flowable<List<T>> {
+    return asFlowable()
+            .filter { it.isLoaded && it.isValid }
+            .map { realm.copyFromRealm(it) }
+            .subscribeOn(AndroidSchedulers.mainThread())
 }
 
 fun <T : RealmObject> RealmQuery<T>.anyOf(fieldName: String, values: LongArray): RealmQuery<T> {

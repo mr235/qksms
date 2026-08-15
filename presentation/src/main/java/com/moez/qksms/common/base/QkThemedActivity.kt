@@ -82,7 +82,7 @@ abstract class QkThemedActivity : QkActivity() {
                     conversation.recipients.size == 1 -> Observable.just(Optional(conversation.recipients.first()))
 
                     else -> messageRepo.getLastIncomingMessage(conversation.id)
-                            .asObservable()
+                            .toObservable()
                             .mapNotNull { messages -> messages.firstOrNull() }
                             .distinctUntilChanged { message -> message.address }
                             .mapNotNull { message ->

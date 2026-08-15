@@ -99,7 +99,14 @@ abstract class QkDatabase : RoomDatabase() {
                     context.applicationContext,
                     QkDatabase::class.java,
                     DATABASE_NAME
-                ).build().also { instance = it }
+                )
+                    // The app was architected around Realm, which permits cheap synchronous reads
+                    // on the main thread (e.g. QkThemedActivity.theme → getConversation). Room
+                    // forbids that by default. Migrating every such call site to an async API is
+                    // Phase 5 of the Realm→Room migration; until that lands, this keeps Room's
+                    // semantics matching Realm's so the app doesn't crash on every synchronous read.
+                    .allowMainThreadQueries()
+                    .build().also { instance = it }
             }
     }
 }

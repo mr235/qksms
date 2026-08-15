@@ -40,6 +40,11 @@ interface RecipientDao {
     @Query("SELECT * FROM recipient WHERE contactLookupKey IS NOT NULL")
     fun getRecipientsWithContact(): Flowable<List<RecipientFull>>
 
+    /** One-shot version of [getRecipients] — ConversationRepositoryImpl.getRecipients(). */
+    @Transaction
+    @Query("SELECT * FROM recipient")
+    fun getRecipientsSnapshot(): List<RecipientFull>
+
     @Transaction
     @Query("SELECT * FROM recipient WHERE id = :recipientId")
     fun getRecipient(recipientId: Long): RecipientFull?

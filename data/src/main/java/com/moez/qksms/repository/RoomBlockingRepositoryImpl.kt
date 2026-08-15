@@ -19,6 +19,9 @@
 package com.moez.qksms.repository
 
 import com.moez.qksms.db.dao.BlockingDao
+import com.moez.qksms.db.entity.BlockedMessageNotificationEntity
+import com.moez.qksms.db.entity.BlockedNumberEntity
+import com.moez.qksms.db.mapper.toDomain
 import com.moez.qksms.model.BlockedMessageNotification
 import com.moez.qksms.model.BlockedNumber
 import com.moez.qksms.util.PhoneNumberUtils
@@ -27,8 +30,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Room-backed stub of [BlockingRepository]. Method bodies will be filled in as part of the
- * Realm → Room migration; for now they throw so the module compiles against the new DAOs.
+ * Room-backed [BlockingRepository]. Mirrors [BlockingRepositoryImpl] semantics.
+ *
+ * `isBlocked` / `unblockNumbers` still read the full number list and filter in memory with
+ * [PhoneNumberUtils.compare] — there is no SQL equivalent for that fuzzy match, so this is
+ * unchanged from the Realm path (see [BlockingDao]).
  */
 @Singleton
 class RoomBlockingRepositoryImpl @Inject constructor(
@@ -36,23 +42,61 @@ class RoomBlockingRepositoryImpl @Inject constructor(
     private val phoneNumberUtils: PhoneNumberUtils
 ) : BlockingRepository {
 
-    override fun blockNumber(vararg addresses: String) = TODO("Room path")
+    override fun blockNumber(vararg addresses: String) {
+        val existing = blockingDao.getBlockedNumbersSnapshot()
+        val newAddresses = addresses.filter { address ->
+            existing.none { number -> phoneNumberUtils.compare(number.address, address) }
+        }
 
-    override fun getBlockedNumbers(): Flowable<List<BlockedNumber>> = TODO("Room path")
+        val maxId = blockingDao.getMaxBlockedNumberId()
+        blockingDao.insertBlockedNumbers(newAddresses.mapIndexed { index, address ->
+            BlockedNumberEntity(id = maxId + 1 + index, address = address)
+        })
+    }
 
-    override fun getBlockedMessagesNotification(): Flowable<List<BlockedMessageNotification>> = TODO("Room path")
+    override fun getBlockedNumbers(): Flowable<List<BlockedNumber>> = blockingDao
+        .getBlockedNumbers()
+        .map { numbers -> numbers.map { it.toDomain() } }
 
-    override fun getBlockedNotificationContents(): List<String> = TODO("Room path")
+    override fun getBlockedMessagesNotification(): Flowable<List<BlockedMessageNotification>> = blockingDao
+        .getBlockedMessageNotifications()
+        .map { notifications -> notifications.map { it.toDomain() } }
 
-    override fun blockMessageNotification(vararg contents: String) = TODO("Room path")
+    override fun getBlockedNotificationContents(): List<String> = blockingDao
+        .getBlockedMessageNotificationsSnapshot()
+        .map { it.content }
 
-    override fun unblockMessageNotification(id: Long) = TODO("Room path")
+    override fun blockMessageNotification(vararg contents: String) {
+        val existing = blockingDao.getBlockedMessageNotificationsSnapshot()
+        val newMessages = contents.filter { content ->
+            existing.none { message -> message.content.equals(content, true) }
+        }
 
-    override fun getBlockedNumber(id: Long): BlockedNumber? = TODO("Room path")
+        val maxId = blockingDao.getMaxBlockedMessageNotificationId()
+        blockingDao.insertBlockedMessageNotifications(newMessages.mapIndexed { index, content ->
+            BlockedMessageNotificationEntity(id = maxId + 1 + index, content = content)
+        })
+    }
 
-    override fun isBlocked(address: String): Boolean = TODO("Room path")
+    override fun unblockMessageNotification(id: Long) =
+        blockingDao.deleteBlockedMessageNotifications(listOf(id))
 
-    override fun unblockNumber(id: Long) = TODO("Room path")
+    override fun getBlockedNumber(id: Long): BlockedNumber? =
+        blockingDao.getBlockedNumber(id)?.toDomain()
 
-    override fun unblockNumbers(vararg addresses: String) = TODO("Room path")
+    override fun isBlocked(address: String): Boolean = blockingDao
+        .getBlockedNumbersSnapshot()
+        .any { number -> phoneNumberUtils.compare(number.address, address) }
+
+    override fun unblockNumber(id: Long) = blockingDao.deleteBlockedNumbers(listOf(id))
+
+    override fun unblockNumbers(vararg addresses: String) {
+        val ids = blockingDao.getBlockedNumbersSnapshot()
+            .filter { number ->
+                addresses.any { address -> phoneNumberUtils.compare(number.address, address) }
+            }
+            .map { it.id }
+
+        blockingDao.deleteBlockedNumbers(ids)
+    }
 }

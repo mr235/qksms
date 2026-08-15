@@ -18,25 +18,63 @@
  */
 package com.moez.qksms.repository
 
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.ContentUris
+import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
+import android.provider.Telephony
+import android.provider.Telephony.Mms
+import android.provider.Telephony.Sms
+import android.telephony.SmsManager
+import android.webkit.MimeTypeMap
+import androidx.core.content.contentValuesOf
+import com.google.android.mms.ContentType
+import com.google.android.mms.MMSPart
+import com.google.android.mms.pdu_alt.MultimediaMessagePdu
+import com.google.android.mms.pdu_alt.PduPersister
+import com.klinker.android.send_message.SmsManagerFactory
+import com.klinker.android.send_message.StripAccents
+import com.klinker.android.send_message.Transaction
+import com.moez.qksms.common.util.extensions.now
+import com.moez.qksms.compat.TelephonyCompat
 import com.moez.qksms.db.dao.ConversationDao
 import com.moez.qksms.db.dao.MessageDao
 import com.moez.qksms.db.dao.MmsPartDao
+import com.moez.qksms.db.mapper.toDomain
+import com.moez.qksms.db.mapper.toEntity
+import com.moez.qksms.extensions.isImage
+import com.moez.qksms.extensions.isVideo
 import com.moez.qksms.manager.ActiveConversationManager
 import com.moez.qksms.manager.KeyManager
 import com.moez.qksms.model.Attachment
 import com.moez.qksms.model.Message
 import com.moez.qksms.model.MmsPart
+import com.moez.qksms.receiver.SendSmsReceiver
+import com.moez.qksms.receiver.SmsDeliveredReceiver
+import com.moez.qksms.receiver.SmsSentReceiver
+import com.moez.qksms.util.ImageUtils
 import com.moez.qksms.util.PhoneNumberUtils
 import com.moez.qksms.util.Preferences
+import com.moez.qksms.util.tryOrNull
 import io.reactivex.Flowable
+import timber.log.Timber
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.sqrt
 
 /**
- * Room-backed stub of [MessageRepository]. Method bodies will be filled in as part of the
- * Realm → Room migration.
+ * Room-backed [MessageRepository]. Mirrors [MessageRepositoryImpl] semantics.
+ *
+ * Read operations use Room DAOs; write operations also update the native ContentProvider so the
+ * system's SMS/MMS tables stay consistent (same as the Realm path).
  */
 @Singleton
 class RoomMessageRepositoryImpl @Inject constructor(
@@ -51,35 +89,112 @@ class RoomMessageRepositoryImpl @Inject constructor(
     private val syncRepository: SyncRepository
 ) : MessageRepository {
 
-    override fun getMessages(threadId: Long, query: String): Flowable<List<Message>> = TODO("Room path")
+    override fun getMessages(threadId: Long, query: String): Flowable<List<Message>> =
+        messageDao.getMessages(threadId, query).map { list -> list.map { it.toDomain() } }
 
-    override fun getMessage(id: Long): Message? = TODO("Room path")
+    override fun getMessage(id: Long): Message? = messageDao.getMessage(id)?.toDomain()
 
-    override fun getMessageForPart(id: Long): Message? = TODO("Room path")
+    override fun getMessageForPart(id: Long): Message? = messageDao.getMessageForPart(id)?.toDomain()
 
-    override fun getLastIncomingMessage(threadId: Long): Flowable<List<Message>> = TODO("Room path")
+    override fun getLastIncomingMessage(threadId: Long): Flowable<List<Message>> {
+        val smsBoxIds = listOf(Sms.MESSAGE_TYPE_INBOX, Sms.MESSAGE_TYPE_ALL)
+        val mmsBoxIds = listOf(Mms.MESSAGE_BOX_INBOX, Mms.MESSAGE_BOX_ALL)
+        return Flowable.just(messageDao.getLastIncomingMessage(threadId, smsBoxIds, mmsBoxIds))
+            .map { list -> list.map { it.toDomain() } }
+    }
 
-    override fun getUnreadCount(): Long = TODO("Room path")
+    override fun getUnreadCount(): Long = conversationDao.getUnreadCount()
 
-    override fun getPart(id: Long): MmsPart? = TODO("Room path")
+    override fun getPart(id: Long): MmsPart? = mmsPartDao.getPart(id)?.toDomain()
 
-    override fun getPartsForConversation(threadId: Long): Flowable<List<MmsPart>> = TODO("Room path")
+    override fun getPartsForConversation(threadId: Long): Flowable<List<MmsPart>> =
+        mmsPartDao.getPartsForConversation(threadId).map { list -> list.map { it.toDomain() } }
 
-    override fun savePart(id: Long): Uri? = TODO("Room path")
+    override fun savePart(id: Long): Uri? {
+        val part = getPart(id) ?: return null
 
-    override fun getUnreadUnseenMessages(threadId: Long): List<Message> = TODO("Room path")
+        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(part.type) ?: return null
+        val message = messageDao.getMessageForPart(id)
+        val date = message?.message?.date
+        val fileName = part.name?.takeIf { name -> name.endsWith(extension) }
+            ?: "${part.type.split("/").last()}_$date.$extension"
 
-    override fun getUnreadMessages(threadId: Long): Flowable<List<Message>> = TODO("Room path")
+        val values = contentValuesOf(
+            MediaStore.MediaColumns.DISPLAY_NAME to fileName,
+            MediaStore.MediaColumns.MIME_TYPE to part.type,
+        )
 
-    override fun getUnreadMessagesSnapshot(threadId: Long): List<Message> = TODO("Room path")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            values.put(MediaStore.MediaColumns.IS_PENDING, 1)
+            values.put(MediaStore.MediaColumns.RELATIVE_PATH, when {
+                part.isImage() -> "${Environment.DIRECTORY_PICTURES}/QKSMS"
+                part.isVideo() -> "${Environment.DIRECTORY_MOVIES}/QKSMS"
+                else -> "${Environment.DIRECTORY_DOWNLOADS}/QKSMS"
+            })
+        }
 
-    override fun markAllSeen() = TODO("Room path")
+        val contentUri = when {
+            part.isImage() -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            part.isVideo() -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> MediaStore.Downloads.EXTERNAL_CONTENT_URI
+            else -> MediaStore.Files.getContentUri("external")
+        }
+        val resolver = context.contentResolver
+        val uri = resolver.insert(contentUri, values)
+        Timber.v("Saving $fileName (${part.type}) to $uri")
 
-    override fun markSeen(threadId: Long) = TODO("Room path")
+        uri?.let {
+            resolver.openOutputStream(uri)?.use { outputStream ->
+                context.contentResolver.openInputStream(part.getUri())?.use { inputStream ->
+                    inputStream.copyTo(outputStream, 1024)
+                }
+            }
+            Timber.v("Saved $fileName (${part.type}) to $uri")
 
-    override fun markRead(vararg threadIds: Long) = TODO("Room path")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                resolver.update(uri, contentValuesOf(MediaStore.MediaColumns.IS_PENDING to 0), null, null)
+            }
+        }
 
-    override fun markUnread(vararg threadIds: Long) = TODO("Room path")
+        return uri
+    }
+
+    override fun getUnreadUnseenMessages(threadId: Long): List<Message> =
+        messageDao.getUnreadUnseenMessages(threadId).map { it.toDomain() }
+
+    override fun getUnreadMessages(threadId: Long): Flowable<List<Message>> =
+        messageDao.getMessages(threadId, "").map { list ->
+            list.map { it.toDomain() }.filter { !it.read }
+        }
+
+    override fun getUnreadMessagesSnapshot(threadId: Long): List<Message> =
+        messageDao.getUnreadMessages(threadId).map { it.toDomain() }
+
+    override fun markAllSeen() = messageDao.markAllSeen()
+
+    override fun markSeen(threadId: Long) = messageDao.markSeen(threadId)
+
+    override fun markRead(vararg threadIds: Long) {
+        messageDao.markRead(threadIds.toList())
+
+        val values = ContentValues().apply {
+            put(Sms.SEEN, true)
+            put(Sms.READ, true)
+        }
+        threadIds.forEach { threadId ->
+            try {
+                val uri = ContentUris.withAppendedId(Telephony.MmsSms.CONTENT_CONVERSATIONS_URI, threadId)
+                context.contentResolver.update(uri, values, "${Sms.READ} = 0", null)
+            } catch (exception: Exception) {
+                Timber.w(exception)
+            }
+        }
+    }
+
+    override fun markUnread(vararg threadIds: Long) {
+        val ids = conversationDao.getReadLastMessageIds(threadIds.toList())
+        if (ids.isNotEmpty()) messageDao.markUnread(ids)
+    }
 
     override fun sendMessage(
         subId: Int,
@@ -88,33 +203,364 @@ class RoomMessageRepositoryImpl @Inject constructor(
         body: String,
         attachments: List<Attachment>,
         delay: Int
-    ) = TODO("Room path")
+    ) {
+        val signedBody = when {
+            prefs.signature.get().isEmpty() -> body
+            body.isNotEmpty() -> body + '\n' + prefs.signature.get()
+            else -> prefs.signature.get()
+        }
 
-    override fun sendSms(message: Message) = TODO("Room path")
+        val smsManager = subId.takeIf { it != -1 }
+            ?.let(SmsManagerFactory::createSmsManager)
+            ?: SmsManager.getDefault()
 
-    override fun resendMms(message: Message) = TODO("Room path")
+        // We only care about stripping SMS
+        val strippedBody = when (prefs.unicode.get()) {
+            true -> StripAccents.stripAccents(signedBody)
+            false -> signedBody
+        }
 
-    override fun cancelDelayedSms(id: Long) = TODO("Room path")
+        val parts = smsManager.divideMessage(strippedBody).orEmpty()
+        val forceMms = prefs.longAsMms.get() && parts.size > 1
 
-    override fun insertSentSms(subId: Int, threadId: Long, address: String, body: String, date: Long): Message =
-        TODO("Room path")
+        if (addresses.size == 1 && attachments.isEmpty() && !forceMms) { // SMS
+            if (delay > 0) { // With delay
+                val sendTime = System.currentTimeMillis() + delay
+                val message = insertSentSms(subId, threadId, addresses.first(), strippedBody, sendTime)
 
-    override fun insertReceivedSms(subId: Int, address: String, body: String, sentTime: Long): Message =
-        TODO("Room path")
+                val intent = getIntentForDelayedSms(message.id)
 
-    override fun markSending(id: Long) = TODO("Room path")
+                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, sendTime, intent)
+            } else { // No delay
+                val message = insertSentSms(subId, threadId, addresses.first(), strippedBody, now())
+                sendSms(message)
+            }
+        } else { // MMS
+            val parts = arrayListOf<MMSPart>()
 
-    override fun markSent(id: Long) = TODO("Room path")
+            val maxWidth = smsManager.carrierConfigValues.getInt(SmsManager.MMS_CONFIG_MAX_IMAGE_WIDTH)
+                .takeIf { prefs.mmsSize.get() == -1 } ?: Int.MAX_VALUE
 
-    override fun markFailed(id: Long, resultCode: Int) = TODO("Room path")
+            val maxHeight = smsManager.carrierConfigValues.getInt(SmsManager.MMS_CONFIG_MAX_IMAGE_HEIGHT)
+                .takeIf { prefs.mmsSize.get() == -1 } ?: Int.MAX_VALUE
 
-    override fun markDelivered(id: Long) = TODO("Room path")
+            var remainingBytes = when (prefs.mmsSize.get()) {
+                -1 -> smsManager.carrierConfigValues.getInt(SmsManager.MMS_CONFIG_MAX_MESSAGE_SIZE)
+                0 -> Int.MAX_VALUE
+                else -> prefs.mmsSize.get() * 1024
+            } * 0.9 // Ugly, but buys us a bit of wiggle room
 
-    override fun markDeliveryFailed(id: Long, resultCode: Int) = TODO("Room path")
+            signedBody.takeIf { it.isNotEmpty() }?.toByteArray()?.let { bytes ->
+                remainingBytes -= bytes.size
+                parts += MMSPart("text", ContentType.TEXT_PLAIN, bytes)
+            }
 
-    override fun deleteMessages(vararg messageIds: Long) = TODO("Room path")
+            // Attach contacts
+            parts += attachments
+                .mapNotNull { attachment -> attachment as? Attachment.Contact }
+                .map { attachment -> attachment.vCard.toByteArray() }
+                .map { vCard ->
+                    remainingBytes -= vCard.size
+                    MMSPart("contact", ContentType.TEXT_VCARD, vCard)
+                }
 
-    override fun getOldMessageCounts(maxAgeDays: Int): Map<Long, Int> = TODO("Room path")
+            val imageBytesByAttachment = attachments
+                .mapNotNull { attachment -> attachment as? Attachment.Image }
+                .associateWith { attachment ->
+                    val uri = attachment.getUri() ?: return@associateWith byteArrayOf()
+                    when (attachment.isGif(context)) {
+                        true -> ImageUtils.getScaledGif(context, uri, maxWidth, maxHeight)
+                        false -> ImageUtils.getScaledImage(context, uri, maxWidth, maxHeight)
+                    }
+                }
+                .toMutableMap()
 
-    override fun deleteOldMessages(maxAgeDays: Int) = TODO("Room path")
+            val imageByteCount = imageBytesByAttachment.values.sumBy { byteArray -> byteArray.size }
+            if (imageByteCount > remainingBytes) {
+                imageBytesByAttachment.forEach { (attachment, originalBytes) ->
+                    val uri = attachment.getUri() ?: return@forEach
+                    val maxBytes = originalBytes.size / imageByteCount.toFloat() * remainingBytes
+
+                    // Get the image dimensions
+                    val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    BitmapFactory.decodeStream(context.contentResolver.openInputStream(uri), null, options)
+                    val width = options.outWidth
+                    val height = options.outHeight
+                    val aspectRatio = width.toFloat() / height.toFloat()
+
+                    var attempts = 0
+                    var scaledBytes = originalBytes
+
+                    while (scaledBytes.size > maxBytes) {
+                        // Estimate how much we need to scale the image down by. If it's still too big, we'll need to
+                        // try smaller and smaller values
+                        val scale = maxBytes / originalBytes.size * (0.9 - attempts * 0.2)
+                        if (scale <= 0) {
+                            Timber.w("Failed to compress ${originalBytes.size / 1024}Kb to ${maxBytes.toInt() / 1024}Kb")
+                            return@forEach
+                        }
+
+                        val newArea = scale * width * height
+                        val newWidth = sqrt(newArea * aspectRatio).toInt()
+                        val newHeight = (newWidth / aspectRatio).toInt()
+
+                        attempts++
+                        scaledBytes = when (attachment.isGif(context)) {
+                            true -> ImageUtils.getScaledGif(context, uri, newWidth, newHeight, 80)
+                            false -> ImageUtils.getScaledImage(context, uri, newWidth, newHeight, 80)
+                        }
+
+                        Timber.d("Compression attempt $attempts: ${scaledBytes.size / 1024}/${maxBytes.toInt() / 1024}Kb ($width*$height -> $newWidth*$newHeight)")
+                    }
+
+                    Timber.v("Compressed ${originalBytes.size / 1024}Kb to ${scaledBytes.size / 1024}Kb with a target size of ${maxBytes.toInt() / 1024}Kb in $attempts attempts")
+                    imageBytesByAttachment[attachment] = scaledBytes
+                }
+            }
+
+            imageBytesByAttachment.forEach { (attachment, bytes) ->
+                parts += when (attachment.isGif(context)) {
+                    true -> MMSPart("image", ContentType.IMAGE_GIF, bytes)
+                    false -> MMSPart("image", ContentType.IMAGE_JPEG, bytes)
+                }
+            }
+
+            // We need to strip the separators from outgoing MMS, or else they'll appear to have sent and not go through
+            val transaction = Transaction(context)
+            val recipients = addresses.map(phoneNumberUtils::normalizeNumber)
+            transaction.sendNewMessage(subId, threadId, recipients, parts, null, null)
+        }
+    }
+
+    override fun sendSms(message: Message) {
+        val smsManager = message.subId.takeIf { it != -1 }
+            ?.let(SmsManagerFactory::createSmsManager)
+            ?: SmsManager.getDefault()
+
+        val parts = smsManager
+            .divideMessage(if (prefs.unicode.get()) StripAccents.stripAccents(message.body) else message.body)
+            ?: arrayListOf()
+
+        val sentIntents = parts.map {
+            val intent = Intent(context, SmsSentReceiver::class.java).putExtra("id", message.id)
+            PendingIntent.getBroadcast(context, message.id.toInt(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
+
+        val deliveredIntents = parts.map {
+            val intent = Intent(context, SmsDeliveredReceiver::class.java).putExtra("id", message.id)
+            val pendingIntent = PendingIntent
+                .getBroadcast(context, message.id.toInt(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            if (prefs.delivery.get()) pendingIntent else null
+        }
+
+        try {
+            smsManager.sendMultipartTextMessage(
+                message.address,
+                null,
+                parts,
+                ArrayList(sentIntents),
+                ArrayList(deliveredIntents)
+            )
+        } catch (e: IllegalArgumentException) {
+            Timber.w(e, "Message body lengths: ${parts.map { it?.length }}")
+            markFailed(message.id, Telephony.MmsSms.ERR_TYPE_GENERIC)
+        }
+    }
+
+    override fun resendMms(message: Message) {
+        val subId = message.subId
+        val threadId = message.threadId
+        val pdu = tryOrNull {
+            PduPersister.getPduPersister(context).load(message.getUri()) as MultimediaMessagePdu
+        } ?: return
+
+        val addresses = pdu.to.map { it.string }.filter { it.isNotBlank() }
+        val parts = message.parts.mapNotNull { part ->
+            val bytes = tryOrNull(false) {
+                context.contentResolver.openInputStream(part.getUri())?.use { inputStream -> inputStream.readBytes() }
+            } ?: return@mapNotNull null
+
+            MMSPart(part.name.orEmpty(), part.type, bytes)
+        }
+
+        Transaction(context).sendNewMessage(subId, threadId, addresses, parts, message.subject, message.getUri())
+    }
+
+    override fun cancelDelayedSms(id: Long) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.cancel(getIntentForDelayedSms(id))
+    }
+
+    private fun getIntentForDelayedSms(id: Long): PendingIntent {
+        val intent = Intent(context, SendSmsReceiver::class.java).putExtra("id", id)
+        return PendingIntent.getBroadcast(context, id.toInt(), intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    }
+
+    override fun insertSentSms(subId: Int, threadId: Long, address: String, body: String, date: Long): Message {
+        val message = Message().apply {
+            this.threadId = threadId
+            this.address = address
+            this.body = body
+            this.date = date
+            this.subId = subId
+
+            id = messageIds.newId()
+            boxId = Sms.MESSAGE_TYPE_OUTBOX
+            type = "sms"
+            read = true
+            seen = true
+        }
+        messageDao.insertOrUpdate(message.toEntity())
+
+        // Insert the message to the native content provider
+        val values = contentValuesOf(
+            Sms.ADDRESS to address,
+            Sms.BODY to body,
+            Sms.DATE to System.currentTimeMillis(),
+            Sms.READ to true,
+            Sms.SEEN to true,
+            Sms.TYPE to Sms.MESSAGE_TYPE_OUTBOX,
+            Sms.THREAD_ID to threadId
+        )
+
+        if (prefs.canUseSubId.get()) {
+            values.put(Sms.SUBSCRIPTION_ID, message.subId)
+        }
+
+        val uri = context.contentResolver.insert(Sms.CONTENT_URI, values)
+
+        // Update the contentId after the message has been inserted to the content provider
+        uri?.lastPathSegment?.toLong()?.let { id -> messageDao.updateContentId(message.id, id) }
+
+        // On some devices, we can't obtain a threadId until after the first message is sent in a
+        // conversation. In this case, we need to update the message's threadId after it gets added
+        // to the native ContentProvider
+        if (threadId == 0L) {
+            uri?.let(syncRepository::syncMessage)
+        }
+
+        return message
+    }
+
+    override fun insertReceivedSms(subId: Int, address: String, body: String, sentTime: Long): Message {
+        val message = Message().apply {
+            this.address = address
+            this.body = body
+            this.dateSent = sentTime
+            this.date = System.currentTimeMillis()
+            this.subId = subId
+
+            id = messageIds.newId()
+            threadId = TelephonyCompat.getOrCreateThreadId(context, address)
+            boxId = Sms.MESSAGE_TYPE_INBOX
+            type = "sms"
+            read = activeConversationManager.getActiveConversation() == threadId
+        }
+        messageDao.insertOrUpdate(message.toEntity())
+
+        // Insert the message to the native content provider
+        val values = contentValuesOf(
+            Sms.ADDRESS to address,
+            Sms.BODY to body,
+            Sms.DATE_SENT to sentTime
+        )
+
+        if (prefs.canUseSubId.get()) {
+            values.put(Sms.SUBSCRIPTION_ID, message.subId)
+        }
+
+        context.contentResolver.insert(Sms.Inbox.CONTENT_URI, values)?.lastPathSegment?.toLong()?.let { id ->
+            messageDao.updateContentId(message.id, id)
+        }
+
+        return message
+    }
+
+    override fun markSending(id: Long) {
+        val message = messageDao.getMessage(id)?.message ?: return
+
+        val boxId = when (message.type == "sms") {
+            true -> Sms.MESSAGE_TYPE_OUTBOX
+            false -> Mms.MESSAGE_BOX_OUTBOX
+        }
+        messageDao.updateBoxId(id, boxId)
+
+        val values = when (message.type == "sms") {
+            true -> contentValuesOf(Sms.TYPE to Sms.MESSAGE_TYPE_OUTBOX)
+            false -> contentValuesOf(Mms.MESSAGE_BOX to Mms.MESSAGE_BOX_OUTBOX)
+        }
+        context.contentResolver.update(message.toDomain().getUri(), values, null, null)
+    }
+
+    override fun markSent(id: Long) {
+        val message = messageDao.getMessage(id)?.message ?: return
+
+        messageDao.updateBoxId(id, Sms.MESSAGE_TYPE_SENT)
+
+        val values = ContentValues().apply { put(Sms.TYPE, Sms.MESSAGE_TYPE_SENT) }
+        context.contentResolver.update(message.toDomain().getUri(), values, null, null)
+    }
+
+    override fun markFailed(id: Long, resultCode: Int) {
+        val message = messageDao.getMessage(id)?.message ?: return
+
+        messageDao.markFailed(id, Sms.MESSAGE_TYPE_FAILED, resultCode)
+
+        val values = ContentValues().apply {
+            put(Sms.TYPE, Sms.MESSAGE_TYPE_FAILED)
+            put(Sms.ERROR_CODE, resultCode)
+        }
+        context.contentResolver.update(message.toDomain().getUri(), values, null, null)
+    }
+
+    override fun markDelivered(id: Long) {
+        val message = messageDao.getMessage(id)?.message ?: return
+
+        val dateSent = System.currentTimeMillis()
+        messageDao.markDelivered(id, Sms.STATUS_COMPLETE, dateSent)
+
+        val values = ContentValues().apply {
+            put(Sms.STATUS, Sms.STATUS_COMPLETE)
+            put(Sms.DATE_SENT, dateSent)
+            put(Sms.READ, true)
+        }
+        context.contentResolver.update(message.toDomain().getUri(), values, null, null)
+    }
+
+    override fun markDeliveryFailed(id: Long, resultCode: Int) {
+        val message = messageDao.getMessage(id)?.message ?: return
+
+        val dateSent = System.currentTimeMillis()
+        messageDao.markDeliveryFailed(id, Sms.STATUS_FAILED, dateSent, resultCode)
+
+        val values = ContentValues().apply {
+            put(Sms.STATUS, Sms.STATUS_FAILED)
+            put(Sms.DATE_SENT, dateSent)
+            put(Sms.READ, true)
+            put(Sms.ERROR_CODE, resultCode)
+        }
+        context.contentResolver.update(message.toDomain().getUri(), values, null, null)
+    }
+
+    override fun deleteMessages(vararg messageIds: Long) {
+        val ids = messageIds.toList()
+        val uris = ids.mapNotNull { id -> messageDao.getMessage(id)?.toDomain()?.getUri() }
+        messageDao.deleteMessages(ids)
+        uris.forEach { uri -> context.contentResolver.delete(uri, null, null) }
+    }
+
+    override fun getOldMessageCounts(maxAgeDays: Int): Map<Long, Int> {
+        val beforeDate = now() - TimeUnit.DAYS.toMillis(maxAgeDays.toLong())
+        return messageDao.getMessagesOlderThan(beforeDate)
+            .groupingBy { message -> message.threadId }
+            .eachCount()
+    }
+
+    override fun deleteOldMessages(maxAgeDays: Int) {
+        val beforeDate = now() - TimeUnit.DAYS.toMillis(maxAgeDays.toLong())
+        val uris = messageDao.getMessagesOlderThan(beforeDate).map { it.toDomain().getUri() }
+        messageDao.deleteOldMessages(beforeDate)
+        uris.forEach { uri -> context.contentResolver.delete(uri, null, null) }
+    }
 }

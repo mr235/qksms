@@ -36,6 +36,7 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.google.android.material.snackbar.Snackbar
 import com.jakewharton.rxbinding3.drawerlayout.drawerOpen
 import com.jakewharton.rxbinding3.view.clicks
@@ -164,6 +165,11 @@ class MainActivity : QkThemedActivity(), MainView {
 
         itemTouchCallback.adapter = conversationsAdapter
         conversationsAdapter.autoScrollToStart(binding.recyclerView)
+
+        // Returning from a conversation marks it read, which flips its view type (unread → read).
+        // DiffUtil emits a change for that row and the default ItemAnimator cross-fades it — the
+        // visible "flash". Keep add/remove/move animations but drop the change cross-fade.
+        (binding.recyclerView.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
 
         // Don't allow clicks to pass through the drawer layout
         binding.drawer.root.clicks().autoDispose(scope()).subscribe()

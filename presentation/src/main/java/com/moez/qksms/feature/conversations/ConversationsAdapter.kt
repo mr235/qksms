@@ -132,4 +132,21 @@ class ConversationsAdapter @Inject constructor(
     // reference equality never matches — key DiffUtil on the stable thread id instead, otherwise
     // every refresh looks like a full replace and the list snaps back to the top.
     override fun areItemsTheSame(old: Conversation, new: Conversation) = old.id == new.id
+
+    // Without this, the base adapter falls back to `old == new` (reference equality). Because Room
+    // hands back a fresh Conversation instance on every emission, that always returns false, so a
+    // DB change (e.g. marking the opened conversation read when returning from ComposeActivity)
+    // makes DiffUtil mark every row as changed. The default ItemAnimator then cross-fades all
+    // visible rows at once — the visible "flash". Compare only what onBindViewHolder renders.
+    override fun areContentsTheSame(old: Conversation, new: Conversation): Boolean {
+        return old.date == new.date
+                && old.snippet == new.snippet
+                && old.unread == new.unread
+                && old.me == new.me
+                && old.pinned == new.pinned
+                && old.draft == new.draft
+                && old.getTitle() == new.getTitle()
+                && old.recipients.map { it.address } == new.recipients.map { it.address }
+                && old.recipients.map { it.contact?.photoUri } == new.recipients.map { it.contact?.photoUri }
+    }
 }

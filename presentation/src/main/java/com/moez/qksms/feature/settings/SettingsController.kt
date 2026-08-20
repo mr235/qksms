@@ -40,6 +40,7 @@ import com.moez.qksms.common.QkDialog
 import com.moez.qksms.common.base.QkController
 import com.moez.qksms.common.util.Colors
 import com.moez.qksms.common.util.extensions.animateLayoutChanges
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
 import com.moez.qksms.common.util.extensions.setBackgroundTint
 import com.moez.qksms.common.util.extensions.setVisible
 import com.moez.qksms.common.widget.PreferenceView
@@ -108,6 +109,9 @@ class SettingsController : QkController<SettingsView, SettingsState, SettingsPre
 
     override fun onViewCreated() {
         binding.preferences.postDelayed({ binding.preferences?.animateLayoutChanges = true }, 100)
+
+        // Keep the last preference row clear of the navigation bar
+        binding.contentView.applyNavBarBottomPadding()
 
         when (Build.VERSION.SDK_INT >= 29) {
             true -> nightModeDialog.adapter.setData(R.array.night_modes)

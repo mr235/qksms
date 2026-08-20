@@ -14,7 +14,7 @@ buildscript {
     ext.conductor_version = '3.2.0'
     ext.coroutines_version = '1.10.2'
     ext.dagger_version = "2.60.1"
-    ext.espresso_version = '3.1.0-alpha3'
+    ext.espresso_version = '3.7.0'
     ext.exoplayer_version = "2.19.1"
     ext.ez_vcard_version = '0.12.1'
     ext.glide_version = "5.0.9"

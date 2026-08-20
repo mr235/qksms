@@ -20,7 +20,6 @@ import android.content.Context;
 import android.net.http.AndroidHttpClient;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
-import android.util.Config;
 import com.android.mms.MmsConfig;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -43,9 +42,6 @@ import java.net.URISyntaxException;
 import java.util.Locale;
 
 public class HttpUtils {
-
-    private static final boolean DEBUG = false;
-    private static final boolean LOCAL_LOGV = DEBUG ? Config.LOGD : Config.LOGV;
 
     public static final int HTTP_POST_METHOD = 1;
     public static final int HTTP_GET_METHOD = 2;

@@ -28,6 +28,7 @@ buildscript {
     ext.material_version = '1.14.0'
     ext.mockito_version = '5.23.0'
     ext.moshi_version = '1.15.2'
+    ext.okhttp_version = '5.5.0'
     ext.room_version = '2.8.4'
     ext.rxandroid_version = '2.1.1'
     ext.rxdogtag_version = '1.0.2'

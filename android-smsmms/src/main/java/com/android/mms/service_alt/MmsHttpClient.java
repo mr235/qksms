@@ -19,40 +19,29 @@ package com.android.mms.service_alt;
 import android.content.Context;
 import android.text.TextUtils;
 import com.android.mms.service_alt.exception.MmsHttpException;
-import com.squareup.okhttp.ConnectionPool;
-import com.squareup.okhttp.ConnectionSpec;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Protocol;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.internal.Internal;
-import com.squareup.okhttp.internal.huc.HttpURLConnectionImpl;
-import com.squareup.okhttp.internal.huc.HttpsURLConnectionImpl;
+import okhttp3.ConnectionPool;
+import okhttp3.ConnectionSpec;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import timber.log.Timber;
 
 import javax.net.SocketFactory;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.Proxy;
-import java.net.ProxySelector;
-import java.net.SocketAddress;
-import java.net.URI;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -120,100 +109,76 @@ public class MmsHttpClient {
                 + (isProxySet ? (", proxy=" + proxyHost + ":" + proxyPort) : "")
                 + ", PDU size=" + (pdu != null ? pdu.length : 0));
         checkMethod(method);
-        HttpURLConnection connection = null;
         try {
             Proxy proxy = null;
             if (isProxySet) {
                 proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
             }
             final URL url = new URL(urlString);
-            // Now get the connection
-            connection = openConnection(url, proxy);
-            connection.setDoInput(true);
-            connection.setConnectTimeout(mmsConfig.getHttpSocketTimeout());
+            final OkHttpClient okHttpClient = buildClient(url, proxy, mmsConfig);
+
             // ------- COMMON HEADERS ---------
+            final Request.Builder requestBuilder = new Request.Builder().url(url);
             // Header: Accept
-            connection.setRequestProperty(HEADER_ACCEPT, HEADER_VALUE_ACCEPT);
+            requestBuilder.header(HEADER_ACCEPT, HEADER_VALUE_ACCEPT);
             // Header: Accept-Language
-            connection.setRequestProperty(
+            requestBuilder.header(
                     HEADER_ACCEPT_LANGUAGE, getCurrentAcceptLanguage(Locale.getDefault()));
             // Header: User-Agent
             final String userAgent = mmsConfig.getUserAgent();
             Timber.i("HTTP: User-Agent=" + userAgent);
-            connection.setRequestProperty(HEADER_USER_AGENT, userAgent);
+            requestBuilder.header(HEADER_USER_AGENT, userAgent);
             // Header: x-wap-profile
             final String uaProfUrlTagName = mmsConfig.getUaProfTagName();
             final String uaProfUrl = mmsConfig.getUaProfUrl();
             if (uaProfUrl != null) {
                 Timber.i("HTTP: UaProfUrl=" + uaProfUrl);
-                connection.setRequestProperty(uaProfUrlTagName, uaProfUrl);
+                requestBuilder.header(uaProfUrlTagName, uaProfUrl);
             }
             // Add extra headers specified by mms_config.xml's httpparams
-            addExtraHeaders(connection, mmsConfig);
+            addExtraHeaders(requestBuilder, mmsConfig);
             // Different stuff for GET and POST
             if (METHOD_POST.equals(method)) {
                 if (pdu == null || pdu.length < 1) {
                     Timber.e("HTTP: empty pdu");
                     throw new MmsHttpException(0/*statusCode*/, "Sending empty PDU");
                 }
-                connection.setDoOutput(true);
-                connection.setRequestMethod(METHOD_POST);
-                if (mmsConfig.getSupportHttpCharsetHeader()) {
-                    connection.setRequestProperty(HEADER_CONTENT_TYPE,
-                            HEADER_VALUE_CONTENT_TYPE_WITH_CHARSET);
-                } else {
-                    connection.setRequestProperty(HEADER_CONTENT_TYPE,
-                            HEADER_VALUE_CONTENT_TYPE_WITHOUT_CHARSET);
-                }
-                logHttpHeaders(connection.getRequestProperties());
-                connection.setFixedLengthStreamingMode(pdu.length);
-                // Sending request body
-                final OutputStream out = new BufferedOutputStream(connection.getOutputStream());
-                out.write(pdu);
-                out.flush();
-                out.close();
+                final String contentType = mmsConfig.getSupportHttpCharsetHeader()
+                        ? HEADER_VALUE_CONTENT_TYPE_WITH_CHARSET
+                        : HEADER_VALUE_CONTENT_TYPE_WITHOUT_CHARSET;
+                requestBuilder.header(HEADER_CONTENT_TYPE, contentType);
+                requestBuilder.post(RequestBody.create(pdu, MediaType.parse(contentType)));
             } else if (METHOD_GET.equals(method)) {
-                logHttpHeaders(connection.getRequestProperties());
-                connection.setRequestMethod(METHOD_GET);
+                requestBuilder.get();
             }
-            // Get response
-            final int responseCode = connection.getResponseCode();
-            final String responseMessage = connection.getResponseMessage();
-            Timber.d("HTTP: " + responseCode + " " + responseMessage);
-            logHttpHeaders(connection.getHeaderFields());
-            if (responseCode / 100 != 2) {
-                throw new MmsHttpException(responseCode, responseMessage);
+
+            final Request request = requestBuilder.build();
+            logHttpHeaders(request.headers().toMultimap());
+
+            try (Response response = okHttpClient.newCall(request).execute()) {
+                final int responseCode = response.code();
+                final String responseMessage = response.message();
+                Timber.d("HTTP: " + responseCode + " " + responseMessage);
+                logHttpHeaders(response.headers().toMultimap());
+                if (responseCode / 100 != 2) {
+                    throw new MmsHttpException(responseCode, responseMessage);
+                }
+                final ResponseBody body = response.body();
+                final byte[] responseBody = body != null ? body.bytes() : new byte[0];
+                Timber.d("HTTP: response size=" + responseBody.length);
+                return responseBody;
             }
-            final InputStream in = new BufferedInputStream(connection.getInputStream());
-            final ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-            final byte[] buf = new byte[4096];
-            int count = 0;
-            while ((count = in.read(buf)) > 0) {
-                byteOut.write(buf, 0, count);
-            }
-            in.close();
-            final byte[] responseBody = byteOut.toByteArray();
-            Timber.d("HTTP: response size="
-                    + (responseBody != null ? responseBody.length : 0));
-            return responseBody;
         } catch (MalformedURLException e) {
             Timber.e(e, "HTTP: invalid URL " + urlString);
             throw new MmsHttpException(0/*statusCode*/, "Invalid URL " + urlString, e);
-        } catch (ProtocolException e) {
-            Timber.e(e, "HTTP: invalid URL protocol " + urlString);
-            throw new MmsHttpException(0/*statusCode*/, "Invalid URL protocol " + urlString, e);
         } catch (IOException e) {
             Timber.e(e, "HTTP: IO failure");
             throw new MmsHttpException(0/*statusCode*/, e);
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
         }
     }
 
     /**
-     * Open an HTTP connection
+     * Build an OkHttpClient configured for MMS transport
      *
      * TODO: The following code is borrowed from android.net.Network.openConnection
      * Once that method supports proxy, we should use that instead
@@ -222,88 +187,33 @@ public class MmsHttpClient {
      *
      * @param url The URL to connect to
      * @param proxy The proxy to use
-     * @return The opened HttpURLConnection
-     * @throws MalformedURLException If URL is malformed
+     * @param mmsConfig The MMS config to use
+     * @return The configured OkHttpClient
+     * @throws MalformedURLException If URL protocol is unsupported
      */
-    private HttpURLConnection openConnection(URL url, final Proxy proxy) throws MalformedURLException {
+    private OkHttpClient buildClient(URL url, final Proxy proxy, MmsConfig.Overridden mmsConfig)
+            throws MalformedURLException {
         final String protocol = url.getProtocol();
-        OkHttpClient okHttpClient;
-        if (protocol.equals("http")) {
-            okHttpClient = new OkHttpClient();
-            okHttpClient.setFollowRedirects(false);
-            okHttpClient.setProtocols(Arrays.asList(Protocol.HTTP_1_1));
-            okHttpClient.setProxySelector(new ProxySelector() {
-                @Override
-                public List<Proxy> select(URI uri) {
-                    if (proxy != null) {
-                        return Arrays.asList(proxy);
-                    } else {
-                        return new ArrayList<Proxy>();
-                    }
-                }
-
-                @Override
-                public void connectFailed(URI uri, SocketAddress address, IOException failure) {
-
-                }
-            });
-            okHttpClient.setAuthenticator(new com.squareup.okhttp.Authenticator() {
-                @Override
-                public Request authenticate(Proxy proxy, Response response) throws IOException {
-                    return null;
-                }
-
-                @Override
-                public Request authenticateProxy(Proxy proxy, Response response) throws IOException {
-                    return null;
-                }
-            });
-            okHttpClient.setConnectionSpecs(Arrays.asList(ConnectionSpec.CLEARTEXT));
-            okHttpClient.setConnectionPool(new ConnectionPool(3, 60000));
-            okHttpClient.setSocketFactory(SocketFactory.getDefault());
-            Internal.instance.setNetwork(okHttpClient, mHostResolver);
-
-            if (proxy != null) {
-                okHttpClient.setProxy(proxy);
-            }
-
-            return new HttpURLConnectionImpl(url, okHttpClient);
-        } else if (protocol.equals("https")) {
-            okHttpClient = new OkHttpClient();
-            okHttpClient.setProtocols(Arrays.asList(Protocol.HTTP_1_1));
-            HostnameVerifier verifier = HttpsURLConnection.getDefaultHostnameVerifier();
-            okHttpClient.setHostnameVerifier(verifier);
-            okHttpClient.setSslSocketFactory(HttpsURLConnection.getDefaultSSLSocketFactory());
-            okHttpClient.setProxySelector(new ProxySelector() {
-                @Override
-                public List<Proxy> select(URI uri) {
-                    return Arrays.asList(proxy);
-                }
-
-                @Override
-                public void connectFailed(URI uri, SocketAddress address, IOException failure) {
-
-                }
-            });
-            okHttpClient.setAuthenticator(new com.squareup.okhttp.Authenticator() {
-                @Override
-                public Request authenticate(Proxy proxy, Response response) throws IOException {
-                    return null;
-                }
-
-                @Override
-                public Request authenticateProxy(Proxy proxy, Response response) throws IOException {
-                    return null;
-                }
-            });
-            okHttpClient.setConnectionSpecs(Arrays.asList(ConnectionSpec.CLEARTEXT));
-            okHttpClient.setConnectionPool(new ConnectionPool(3, 60000));
-            Internal.instance.setNetwork(okHttpClient, mHostResolver);
-
-            return new HttpsURLConnectionImpl(url, okHttpClient);
-        } else {
+        if (!protocol.equals("http") && !protocol.equals("https")) {
             throw new MalformedURLException("Invalid URL or unrecognized protocol " + protocol);
         }
+        final int timeout = mmsConfig.getHttpSocketTimeout();
+        final OkHttpClient.Builder builder = new OkHttpClient.Builder()
+                .followRedirects(false)
+                .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+                .connectionSpecs(Arrays.asList(ConnectionSpec.CLEARTEXT, ConnectionSpec.MODERN_TLS))
+                .connectionPool(mConnectionPool)
+                .dns(mHostResolver)
+                .connectTimeout(timeout, TimeUnit.MILLISECONDS)
+                .readTimeout(timeout, TimeUnit.MILLISECONDS)
+                .writeTimeout(timeout, TimeUnit.MILLISECONDS);
+        if (proxy != null) {
+            builder.proxy(proxy);
+        }
+        if (protocol.equals("http")) {
+            builder.socketFactory(mSocketFactory);
+        }
+        return builder.build();
     }
 
     private static void logHttpHeaders(Map<String, List<String>> headers) {
@@ -431,7 +341,7 @@ public class MmsHttpClient {
      * @param connection The HttpURLConnection that we add headers to
      * @param mmsConfig The MmsConfig object
      */
-    private void addExtraHeaders(HttpURLConnection connection, MmsConfig.Overridden mmsConfig) {
+    private void addExtraHeaders(Request.Builder requestBuilder, MmsConfig.Overridden mmsConfig) {
         final String extraHttpParams = mmsConfig.getHttpParams();
         if (!TextUtils.isEmpty(extraHttpParams)) {
             // Parse the parameter list
@@ -443,7 +353,7 @@ public class MmsHttpClient {
                     final String value = resolveMacro(mContext, splitPair[1].trim(), mmsConfig);
                     if (!TextUtils.isEmpty(name) && !TextUtils.isEmpty(value)) {
                         // Add the header if the param is valid
-                        connection.setRequestProperty(name, value);
+                        requestBuilder.header(name, value);
                     }
                 }
             }

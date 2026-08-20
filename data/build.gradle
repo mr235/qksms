@@ -21,11 +21,11 @@ apply plugin: 'com.android.legacy-kapt'
 apply plugin: 'com.google.devtools.ksp'
 
 android {
-    compileSdkVersion 37
+    compileSdkVersion compileSdkLevel
     flavorDimensions "analytics"
 
     defaultConfig {
-        minSdkVersion 23
+        minSdkVersion minSdkLevel
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField "String", "AMPLITUDE_API_KEY", "\"${System.getenv("AMPLITUDE_API_KEY")}\""
@@ -40,10 +40,10 @@ android {
     }
     namespace 'com.moez.qksms.data'
     lint {
-        targetSdk 37
+        targetSdk targetSdkLevel
     }
     testOptions {
-        targetSdk 37
+        targetSdk targetSdkLevel
     }
 }
 

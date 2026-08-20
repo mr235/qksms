@@ -19,19 +19,19 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 37
+    compileSdkVersion compileSdkLevel
 
     defaultConfig {
-        minSdkVersion 23
+        minSdkVersion minSdkLevel
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
     }
     namespace 'com.moez.qksms.common'
     lint {
-        targetSdk 37
+        targetSdk targetSdkLevel
     }
     testOptions {
-        targetSdk 37
+        targetSdk targetSdkLevel
     }
 }
 

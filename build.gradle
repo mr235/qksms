@@ -41,6 +41,13 @@ buildscript {
 
     ext.abiCodes = ['armeabi-v7a': 1, 'arm64-v8a': 2]
 
+    // Android SDK levels & app version (shared across all modules)
+    ext.compileSdkLevel = 37
+    ext.minSdkLevel = 23
+    ext.targetSdkLevel = 37
+    ext.appVersionCode = 2220
+    ext.appVersionName = '3.10.1'
+
     repositories {
         maven { url 'https://maven.aliyun.com/repository/central' }
         maven { url 'https://maven.aliyun.com/repository/jcenter' }

@@ -19,21 +19,21 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 37
+    compileSdkVersion compileSdkLevel
 
     defaultConfig {
-        minSdkVersion 23
+        minSdkVersion minSdkLevel
     }
 
 
     useLibrary 'org.apache.http.legacy'
     lint {
         abortOnError false
-        targetSdk 37
+        targetSdk targetSdkLevel
     }
     namespace 'com.klinker.android.send_message'
     testOptions {
-        targetSdk 37
+        targetSdk targetSdkLevel
     }
 }
 

@@ -32,6 +32,7 @@ import android.provider.MediaStore
 import android.text.format.DateFormat
 import android.view.Menu
 import android.view.MenuItem
+import androidx.activity.addCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.view.isVisible
@@ -159,6 +160,10 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
                 .subscribe()
 
         window.callback = ComposeWindowCallback(window.callback, this)
+
+        onBackPressedDispatcher.addCallback(this) {
+            backPressedIntent.onNext(Unit)
+        }
     }
 
     override fun onStart() {
@@ -395,7 +400,5 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
         cameraDestination = savedInstanceState.getParcelable(CameraDestinationKey)
         super.onRestoreInstanceState(savedInstanceState)
     }
-
-    override fun onBackPressed() = backPressedIntent.onNext(Unit)
 
 }

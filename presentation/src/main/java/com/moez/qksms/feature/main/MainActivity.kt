@@ -29,6 +29,7 @@ import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import androidx.activity.addCallback
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.core.app.ActivityCompat
 import androidx.core.view.GravityCompat
@@ -204,6 +205,10 @@ class MainActivity : QkThemedActivity(), MainView {
                     // Set the FAB compose icon color
                     binding.compose.setTint(theme.textPrimary)
                 }
+
+        onBackPressedDispatcher.addCallback(this) {
+            backPressedSubject.onNext(NavItem.BACK)
+        }
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -436,10 +441,6 @@ class MainActivity : QkThemedActivity(), MainView {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         optionsItemIntent.onNext(item.itemId)
         return true
-    }
-
-    override fun onBackPressed() {
-        backPressedSubject.onNext(NavItem.BACK)
     }
 
 }

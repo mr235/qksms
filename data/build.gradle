@@ -102,8 +102,8 @@ dependencies {
     implementation project(':common')
     implementation project(':domain')
 
-    withAnalyticsImplementation 'com.android.installreferrer:installreferrer:1.1'
-    withAnalyticsImplementation "com.amplitude:android-sdk:2.16.0"
+    withAnalyticsImplementation "com.android.installreferrer:installreferrer:$installreferrer_version"
+    withAnalyticsImplementation "com.amplitude:android-sdk:$amplitude_version"
 }
 
 repositories {

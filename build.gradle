@@ -3,6 +3,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 buildscript {
+    ext.amplitude_version = '3.35.1'
     ext.androidx_appcompat_version = '1.8.0'
     ext.androidx_constraintlayout_version = '2.2.2'
     ext.androidx_core_version = '1.19.0'
@@ -22,6 +23,7 @@ buildscript {
     ext.ez_vcard_version = '0.12.1'
     ext.firebase_crashlytics_version = '20.1.0'
     ext.glide_version = "5.0.9"
+    ext.installreferrer_version = '2.2'
     ext.junit_version = '4.13.2'
     ext.kotlin_version = '2.3.21'
     ext.ksp_version = '2.3.11'
@@ -64,7 +66,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:9.3.1'
         classpath 'com.android.tools.build:gradle-kotlin:9.3.1'
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.5.2'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:3.0.8'
         classpath 'com.google.gms:google-services:4.5.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:$ksp_version"

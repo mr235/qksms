@@ -97,10 +97,9 @@ dependencies {
     // lifecycle
     // lifecycle-extensions was removed after 2.2.0; its APIs are split into the artifacts below.
     // This project only uses ViewModel/ViewModelProvider/Lifecycle/LifecycleOwner, so runtime +
-    // viewmodel (plus common-java8 for DefaultLifecycleObserver) cover everything.
+    // viewmodel cover everything (lifecycle-common comes transitively).
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
-    implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
 
     // androidx
     implementation "androidx.appcompat:appcompat:$androidx_appcompat_version"

@@ -22,7 +22,7 @@ buildscript {
     ext.kotlin_version = '2.3.21'
     ext.ksp_version = '2.3.11'
     ext.libphonenumber_version = '9.0.5'
-    ext.lifecycle_version = '2.2.0'
+    ext.lifecycle_version = '2.11.0'
     ext.material_version = '1.14.0'
     ext.mockito_version = '5.20.0'
     ext.moshi_version = '1.15.2'

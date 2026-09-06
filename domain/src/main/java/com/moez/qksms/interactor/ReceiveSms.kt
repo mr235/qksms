@@ -94,9 +94,12 @@ class ReceiveSms @Inject constructor(
                 .filter {
                     conversation ->
                     val blockedContents = blockingRepo.getBlockedNotificationContents()
+                    val userPatterns = blockedContents
+                        .filter { it.isNotEmpty() }
+                        .joinToString("|") { Regex.escape(it) }
                     var blockedPattern = "退订|退定|退TD|度小满"
-                    if (blockedContents.isNotEmpty()) {
-                        blockedPattern += "|${blockedContents.joinToString("|")}"
+                    if (userPatterns.isNotEmpty()) {
+                        blockedPattern += "|$userPatterns"
                     }
                     !conversation.blocked &&
                             conversation.snippet != null &&

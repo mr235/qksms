@@ -33,7 +33,7 @@ Tests are **instrumented** tests (`src/androidTest`, require a device/emulator) 
   -Pandroid.testInstrumentationRunnerArguments.class=com.moez.QKSMS.repository.MessageRepositoryTest
 ```
 
-Build environment: JDK 21, Kotlin 2.3.21, AGP 9.3.0, KSP 2.3.11, Gradle 9.5.0, compileSdk 37, minSdk 23, targetSdk 33. Maven repos are routed through Aliyun mirrors (see root `build.gradle`). AGP built-in Kotlin is enabled (the standalone `kotlin-android` plugin is removed); `com.android.legacy-kapt` is kept only for moshi's `kaptRelease moshi-kotlin-codegen`.
+Build environment: JDK 21, Kotlin 2.3.21, AGP 9.3.1, KSP 2.3.11, Gradle 9.5.0, compileSdk 37, minSdk 23, targetSdk 37. Maven repos are routed through Aliyun mirrors (see root `build.gradle`). AGP built-in Kotlin is enabled (the standalone `kotlin-android` plugin is removed); `com.android.legacy-kapt` is kept only for moshi's `kaptRelease moshi-kotlin-codegen`.
 
 > **JDK 21 required.** AGP 9's built-in Kotlin toolchain and lint analyzer require JDK 21 APIs. Building on JDK 17 fails with `NoSuchMethodError`. Set the Gradle JDK to 21 (Android Studio: Settings → Build, Execution, Deployment → Build Tools → Gradle → Gradle JDK).
 

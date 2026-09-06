@@ -53,11 +53,11 @@ buildscript {
     ext.appVersionName = '3.10.1'
 
     repositories {
-        maven { url 'https://maven.aliyun.com/repository/central' }
-        maven { url 'https://maven.aliyun.com/repository/jcenter' }
-        maven { url 'https://maven.aliyun.com/repository/google' }
-        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
-        maven { url 'https://maven.aliyun.com/repository/public' }
+//        maven { url 'https://maven.aliyun.com/repository/central' }
+//        maven { url 'https://maven.aliyun.com/repository/jcenter' }
+//        maven { url 'https://maven.aliyun.com/repository/google' }
+//        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+//        maven { url 'https://maven.aliyun.com/repository/public' }
         gradlePluginPortal()
         google()
         mavenCentral()
@@ -79,10 +79,10 @@ allprojects {
             name 'glide-snapshot'
             url 'https://oss.sonatype.org/content/repositories/snapshots'
         }
-        maven { url 'https://maven.aliyun.com/repository/central' }
-        maven { url 'https://maven.aliyun.com/repository/google' }
-        maven { url 'https://maven.aliyun.com/repository/public' }
-        maven { url 'https://maven.aliyun.com/repository/jcenter' }
+//        maven { url 'https://maven.aliyun.com/repository/central' }
+//        maven { url 'https://maven.aliyun.com/repository/google' }
+//        maven { url 'https://maven.aliyun.com/repository/public' }
+//        maven { url 'https://maven.aliyun.com/repository/jcenter' }
         google()
         mavenCentral()
         maven { url 'https://jitpack.io' }

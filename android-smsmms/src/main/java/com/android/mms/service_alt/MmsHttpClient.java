@@ -31,6 +31,7 @@ import okhttp3.ResponseBody;
 import timber.log.Timber;
 
 import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -210,7 +211,7 @@ public class MmsHttpClient {
         if (proxy != null) {
             builder.proxy(proxy);
         }
-        if (protocol.equals("http")) {
+        if (mSocketFactory != null && !(mSocketFactory instanceof SSLSocketFactory)) {
             builder.socketFactory(mSocketFactory);
         }
         return builder.build();

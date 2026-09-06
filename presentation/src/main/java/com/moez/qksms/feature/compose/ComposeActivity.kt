@@ -177,11 +177,6 @@ class ComposeActivity : QkThemedActivity(), ComposeView {
     }
 
     override fun render(state: ComposeState) {
-        if (state.hasError) {
-            finish()
-            return
-        }
-
         threadId.onNext(state.threadId)
 
         title = when {

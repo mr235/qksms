@@ -25,7 +25,6 @@ import com.moez.qksms.model.Message
 import com.moez.qksms.model.Recipient
 
 data class ComposeState(
-    val hasError: Boolean = false,
     val editingMode: Boolean = false,
     val threadId: Long = 0,
     val selectedChips: List<Recipient> = ArrayList(),

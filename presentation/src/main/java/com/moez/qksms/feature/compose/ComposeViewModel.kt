@@ -237,7 +237,7 @@ class ComposeViewModel @Inject constructor(
                     // If there's no contacts already selected, and the user cancelled the contact
                     // selection, close the activity
                     if (hashmap.isEmpty() && chips.isEmpty()) {
-                        newState { copy(hasError = true) }
+                        view.finish()
                     }
                     // Filter out any numbers that are already selected
                     hashmap.filter { (address) ->
@@ -740,7 +740,10 @@ class ComposeViewModel @Inject constructor(
                     this.attachments.onNext(ArrayList())
 
                     if (state.editingMode) {
-                        newState { copy(editingMode = false, hasError = !sendAsGroup) }
+                        newState { copy(editingMode = false) }
+                        if (!sendAsGroup) {
+                            view.finish()
+                        }
                     }
                 }
                 .autoDispose(view.scope())
@@ -759,7 +762,7 @@ class ComposeViewModel @Inject constructor(
                 .withLatestFrom(state) { _, state ->
                     when {
                         state.selectedMessages > 0 -> view.clearSelection()
-                        else -> newState { copy(hasError = true) }
+                        else -> view.finish()
                     }
                 }
                 .autoDispose(view.scope())

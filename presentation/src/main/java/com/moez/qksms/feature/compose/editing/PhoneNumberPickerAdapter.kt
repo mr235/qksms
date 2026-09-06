@@ -75,4 +75,9 @@ class PhoneNumberPickerAdapter @Inject constructor(
         selectedItem = data.find { number -> number.isDefault }?.id ?: data.firstOrNull()?.id
     }
 
+    override fun areItemsTheSame(old: PhoneNumber, new: PhoneNumber): Boolean = old.id == new.id
+
+    override fun areContentsTheSame(old: PhoneNumber, new: PhoneNumber): Boolean = old == new
+
 }
+

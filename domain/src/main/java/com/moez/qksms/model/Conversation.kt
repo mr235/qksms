@@ -42,4 +42,37 @@ open class Conversation(
         return name.takeIf { it.isNotBlank() } ?: recipients.joinToString { recipient -> recipient.getDisplayName() }
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Conversation) return false
+
+        if (id != other.id) return false
+        if (archived != other.archived) return false
+        if (blocked != other.blocked) return false
+        if (pinned != other.pinned) return false
+        if (recipients != other.recipients) return false
+        if (lastMessage != other.lastMessage) return false
+        if (draft != other.draft) return false
+        if (blockingClient != other.blockingClient) return false
+        if (blockReason != other.blockReason) return false
+        if (name != other.name) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + archived.hashCode()
+        result = 31 * result + blocked.hashCode()
+        result = 31 * result + pinned.hashCode()
+        result = 31 * result + recipients.hashCode()
+        result = 31 * result + (lastMessage?.hashCode() ?: 0)
+        result = 31 * result + draft.hashCode()
+        result = 31 * result + (blockingClient?.hashCode() ?: 0)
+        result = 31 * result + (blockReason?.hashCode() ?: 0)
+        result = 31 * result + name.hashCode()
+        return result
+    }
+
 }
+

@@ -324,6 +324,26 @@ class MessagesAdapter @Inject constructor(
     // equality never matches and DiffUtil would report a full replace. Key on the primary key.
     override fun areItemsTheSame(old: Message, new: Message) = old.id == new.id
 
+    override fun areContentsTheSame(old: Message, new: Message): Boolean {
+        return old.id == new.id &&
+                old.threadId == new.threadId &&
+                old.address == new.address &&
+                old.body == new.body &&
+                old.date == new.date &&
+                old.dateSent == new.dateSent &&
+                old.read == new.read &&
+                old.seen == new.seen &&
+                old.subId == new.subId &&
+                old.boxId == new.boxId &&
+                old.type == new.type &&
+                old.deliveryStatus == new.deliveryStatus &&
+                old.errorCode == new.errorCode &&
+                old.errorType == new.errorType &&
+                old.subject == new.subject &&
+                old.parts == new.parts
+    }
+
+
     /**
      * Cache the contacts in a map by the address, because the messages we're binding don't have
      * a reference to the contact.

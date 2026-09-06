@@ -18,7 +18,7 @@
  */
 package com.moez.qksms.model
 
-open class Contact(
+data class Contact(
     var lookupKey: String = "",
     var numbers: MutableList<PhoneNumber> = mutableListOf(),
     var name: String = "",

@@ -137,4 +137,11 @@ class GalleryPagerAdapter @Inject constructor(private val context: Context) : Qk
     // equality never matches and DiffUtil would report a full replace. Key on the primary key.
     override fun areItemsTheSame(old: MmsPart, new: MmsPart) = old.id == new.id
 
+    override fun areContentsTheSame(old: MmsPart, new: MmsPart): Boolean {
+        return old.type == new.type &&
+                old.name == new.name &&
+                old.text == new.text &&
+                old.seq == new.seq
+    }
 }
+

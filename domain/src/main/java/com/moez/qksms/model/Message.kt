@@ -157,4 +157,66 @@ class Message {
         !isMe() && !other.isMe() -> subId == other.subId && address == other.address
         else -> false
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Message) return false
+
+        if (id != other.id) return false
+        if (threadId != other.threadId) return false
+        if (contentId != other.contentId) return false
+        if (address != other.address) return false
+        if (boxId != other.boxId) return false
+        if (type != other.type) return false
+        if (date != other.date) return false
+        if (dateSent != other.dateSent) return false
+        if (seen != other.seen) return false
+        if (read != other.read) return false
+        if (locked != other.locked) return false
+        if (subId != other.subId) return false
+        if (body != other.body) return false
+        if (errorCode != other.errorCode) return false
+        if (deliveryStatus != other.deliveryStatus) return false
+        if (attachmentTypeString != other.attachmentTypeString) return false
+        if (mmsDeliveryStatusString != other.mmsDeliveryStatusString) return false
+        if (readReportString != other.readReportString) return false
+        if (errorType != other.errorType) return false
+        if (messageSize != other.messageSize) return false
+        if (messageType != other.messageType) return false
+        if (mmsStatus != other.mmsStatus) return false
+        if (subject != other.subject) return false
+        if (textContentType != other.textContentType) return false
+        if (parts != other.parts) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + threadId.hashCode()
+        result = 31 * result + contentId.hashCode()
+        result = 31 * result + address.hashCode()
+        result = 31 * result + boxId.hashCode()
+        result = 31 * result + type.hashCode()
+        result = 31 * result + date.hashCode()
+        result = 31 * result + dateSent.hashCode()
+        result = 31 * result + seen.hashCode()
+        result = 31 * result + read.hashCode()
+        result = 31 * result + locked.hashCode()
+        result = 31 * result + subId.hashCode()
+        result = 31 * result + body.hashCode()
+        result = 31 * result + errorCode.hashCode()
+        result = 31 * result + deliveryStatus.hashCode()
+        result = 31 * result + attachmentTypeString.hashCode()
+        result = 31 * result + mmsDeliveryStatusString.hashCode()
+        result = 31 * result + readReportString.hashCode()
+        result = 31 * result + errorType.hashCode()
+        result = 31 * result + messageSize.hashCode()
+        result = 31 * result + messageType.hashCode()
+        result = 31 * result + mmsStatus.hashCode()
+        result = 31 * result + subject.hashCode()
+        result = 31 * result + textContentType.hashCode()
+        result = 31 * result + parts.hashCode()
+        return result
+    }
 }

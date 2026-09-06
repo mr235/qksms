@@ -98,4 +98,14 @@ class BlockedMessagesAdapter @Inject constructor(
     // equality never matches and DiffUtil would report a full replace. Key on the primary key.
     override fun areItemsTheSame(old: Conversation, new: Conversation) = old.id == new.id
 
+    override fun areContentsTheSame(old: Conversation, new: Conversation): Boolean {
+        return old.date == new.date
+                && old.getTitle() == new.getTitle()
+                && old.unread == new.unread
+                && old.blockingClient == new.blockingClient
+                && old.blockReason == new.blockReason
+                && old.recipients.map { it.address } == new.recipients.map { it.address }
+                && old.recipients.map { it.contact?.photoUri } == new.recipients.map { it.contact?.photoUri }
+    }
 }
+

@@ -21,7 +21,7 @@ package com.moez.qksms.model
 import android.telephony.PhoneNumberUtils
 import java.util.*
 
-open class Recipient(
+data class Recipient(
     var id: Long = 0,
     var address: String = "",
     var contact: Contact? = null,

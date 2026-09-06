@@ -94,6 +94,16 @@ class ScheduledMessageAdapter @Inject constructor(
     // equality never matches and DiffUtil would report a full replace. Key on the primary key.
     override fun areItemsTheSame(old: ScheduledMessage, new: ScheduledMessage) = old.id == new.id
 
+    override fun areContentsTheSame(old: ScheduledMessage, new: ScheduledMessage): Boolean {
+        return old.date == new.date &&
+                old.subId == new.subId &&
+                old.body == new.body &&
+                old.sendAsGroup == new.sendAsGroup &&
+                old.recipients == new.recipients &&
+                old.attachments == new.attachments
+    }
+
+
     /**
      * Loading the contact list queries the database, which used to happen lazily from
      * [onBindViewHolder] and therefore on the main thread. Fetch it once off the main thread when

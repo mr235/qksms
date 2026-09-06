@@ -52,4 +52,8 @@ class BlockedNumbersAdapter : QkListAdapter<BlockedNumber, BlockedNumberListItem
     // equality never matches and DiffUtil would report a full replace. Key on the primary key.
     override fun areItemsTheSame(old: BlockedNumber, new: BlockedNumber) = old.id == new.id
 
+    override fun areContentsTheSame(old: BlockedNumber, new: BlockedNumber): Boolean {
+        return old.address == new.address
+    }
 }
+

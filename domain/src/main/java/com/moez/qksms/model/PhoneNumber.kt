@@ -18,10 +18,11 @@
  */
 package com.moez.qksms.model
 
-open class PhoneNumber(
+data class PhoneNumber(
     var id: Long = 0,
     var accountType: String? = "",
     var address: String = "",
     var type: String = "",
     var isDefault: Boolean = false
 )
+

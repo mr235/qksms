@@ -78,4 +78,10 @@ class ChipsAdapter @Inject constructor() : QkAdapter<Recipient, ContactChipBindi
             detailedChipView.hide()
         }
     }
+
+    override fun areItemsTheSame(old: Recipient, new: Recipient): Boolean = old.address == new.address
+
+    override fun areContentsTheSame(old: Recipient, new: Recipient): Boolean = old == new
+
 }
+

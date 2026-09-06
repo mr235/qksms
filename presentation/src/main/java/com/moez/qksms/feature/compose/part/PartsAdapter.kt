@@ -105,4 +105,8 @@ class PartsAdapter @Inject constructor(
         return partBinders.indexOfFirst { it.canBindPart(part) }
     }
 
+    override fun areItemsTheSame(old: MmsPart, new: MmsPart): Boolean = old.id == new.id
+
+    override fun areContentsTheSame(old: MmsPart, new: MmsPart): Boolean = old == new
+
 }

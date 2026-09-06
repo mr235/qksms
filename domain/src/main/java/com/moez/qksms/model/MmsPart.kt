@@ -20,14 +20,14 @@ package com.moez.qksms.model
 
 import androidx.core.net.toUri
 
-open class MmsPart {
-
-    var id: Long = 0
-    var messageId: Long = 0
-    var type: String = ""
-    var seq: Int = -1
-    var name: String? = null
+data class MmsPart(
+    var id: Long = 0,
+    var messageId: Long = 0,
+    var type: String = "",
+    var seq: Int = -1,
+    var name: String? = null,
     var text: String? = null
+) {
 
     fun getUri() = "content://mms/part/$id".toUri()
 

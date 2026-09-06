@@ -25,6 +25,7 @@ import com.jakewharton.rxbinding3.view.clicks
 import com.moez.qksms.BuildConfig
 import com.moez.qksms.R
 import com.moez.qksms.common.base.QkController
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
 import com.moez.qksms.common.widget.PreferenceView
 import com.moez.qksms.databinding.AboutControllerBinding
 import com.moez.qksms.injection.appComponent
@@ -48,6 +49,7 @@ class AboutController : QkController<AboutView, Unit, AboutPresenter>(), AboutVi
 
     override fun onViewCreated() {
         binding.version.summary = BuildConfig.VERSION_NAME
+        binding.scrollView.applyNavBarBottomPadding()
     }
 
     override fun onAttach(view: View) {

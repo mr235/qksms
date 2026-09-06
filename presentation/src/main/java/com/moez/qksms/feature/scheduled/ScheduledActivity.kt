@@ -28,6 +28,7 @@ import com.moez.qksms.common.QkDialog
 import com.moez.qksms.common.base.QkThemedActivity
 import com.moez.qksms.common.util.FontProvider
 import com.moez.qksms.common.util.extensions.applyNavBarBottomMargin
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
 import com.moez.qksms.common.util.extensions.setBackgroundTint
 import com.moez.qksms.common.util.extensions.setTint
 import com.moez.qksms.databinding.ScheduledActivityBinding
@@ -61,6 +62,7 @@ class ScheduledActivity : QkThemedActivity(), ScheduledView {
         viewModel.bindView(this)
 
         // The AppBarLayout already fits the status bar; only the bottom needs handling
+        binding.scrollView.applyNavBarBottomPadding()
         binding.compose.applyNavBarBottomMargin()
         binding.upgrade.applyNavBarBottomMargin()
 

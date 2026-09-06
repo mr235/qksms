@@ -31,6 +31,7 @@ import com.moez.qksms.R
 import com.moez.qksms.common.QkDialog
 import com.moez.qksms.common.base.QkThemedActivity
 import com.moez.qksms.common.util.extensions.animateLayoutChanges
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
 import com.moez.qksms.common.util.extensions.setVisible
 import com.moez.qksms.common.widget.PreferenceView
 import com.moez.qksms.common.widget.QkSwitch
@@ -65,6 +66,7 @@ class NotificationPrefsActivity : QkThemedActivity(), NotificationPrefsView {
         super.onCreate(savedInstanceState)
         binding = NotificationPrefsActivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.scrollView.applyNavBarBottomPadding()
         setTitle(R.string.title_notification_prefs)
         showBackButton(true)
         viewModel.bindView(this)

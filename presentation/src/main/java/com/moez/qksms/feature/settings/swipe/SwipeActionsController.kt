@@ -28,6 +28,7 @@ import com.moez.qksms.common.QkDialog
 import com.moez.qksms.common.base.QkController
 import com.moez.qksms.common.util.Colors
 import com.moez.qksms.common.util.extensions.animateLayoutChanges
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
 import com.moez.qksms.common.util.extensions.setBackgroundTint
 import com.moez.qksms.common.util.extensions.setTint
 import com.moez.qksms.databinding.SwipeActionsControllerBinding
@@ -65,6 +66,8 @@ class SwipeActionsController : QkController<SwipeActionsView, SwipeActionsState,
     }
 
     override fun onViewCreated() {
+        binding.scrollView.applyNavBarBottomPadding()
+
         colors.theme().let { theme ->
             binding.rightIcon.setBackgroundTint(theme.theme)
             binding.rightIcon.setTint(theme.textPrimary)

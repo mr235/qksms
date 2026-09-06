@@ -12,6 +12,7 @@ import com.jakewharton.rxbinding3.view.clicks
 import com.moez.qksms.R
 import com.moez.qksms.common.base.QkController
 import com.moez.qksms.common.util.Colors
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
 import com.moez.qksms.common.util.extensions.resolveThemeColor
 import com.moez.qksms.databinding.BlockingManagerControllerBinding
 import com.moez.qksms.injection.appComponent
@@ -38,6 +39,11 @@ class BlockingManagerController : QkController<BlockingManagerView, BlockingMana
     override fun getRootView(inflater: LayoutInflater, container: ViewGroup): View {
         binding = BlockingManagerControllerBinding.inflate(inflater, container, false)
         return binding.root
+    }
+
+    override fun onViewCreated() {
+        super.onViewCreated()
+        binding.scrollView.applyNavBarBottomPadding()
     }
 
     override fun onAttach(view: View) {

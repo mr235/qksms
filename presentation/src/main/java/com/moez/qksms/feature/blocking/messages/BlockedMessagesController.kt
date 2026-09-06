@@ -30,6 +30,7 @@ import androidx.appcompat.widget.Toolbar
 import com.moez.qksms.R
 import com.moez.qksms.common.base.QkController
 import com.moez.qksms.common.util.Colors
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
 import com.moez.qksms.databinding.BlockedMessagesControllerBinding
 import com.moez.qksms.feature.blocking.BlockingDialog
 import com.moez.qksms.injection.appComponent
@@ -68,6 +69,7 @@ class BlockedMessagesController : QkController<BlockedMessagesView, BlockedMessa
 
     override fun onViewCreated() {
         super.onViewCreated()
+        binding.conversations.applyNavBarBottomPadding()
         blockedMessagesAdapter.emptyView = binding.empty
         binding.conversations.adapter = blockedMessagesAdapter
     }

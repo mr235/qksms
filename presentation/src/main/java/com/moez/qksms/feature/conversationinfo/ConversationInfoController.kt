@@ -28,6 +28,7 @@ import com.moez.qksms.R
 import com.moez.qksms.common.Navigator
 import com.moez.qksms.common.QkChangeHandler
 import com.moez.qksms.common.base.QkController
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
 import com.moez.qksms.common.util.extensions.scrapViews
 import com.moez.qksms.common.widget.TextInputDialog
 import com.moez.qksms.databinding.ConversationInfoControllerBinding
@@ -76,6 +77,7 @@ class ConversationInfoController(
     }
 
     override fun onViewCreated() {
+        binding.recyclerView.applyNavBarBottomPadding()
         binding.recyclerView.adapter = adapter
         binding.recyclerView.addItemDecoration(GridSpacingItemDecoration(adapter, activity!!))
         binding.recyclerView.layoutManager = GridLayoutManager(activity, 3).apply {

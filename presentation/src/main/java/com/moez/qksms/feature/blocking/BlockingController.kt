@@ -28,6 +28,7 @@ import com.moez.qksms.common.QkChangeHandler
 import com.moez.qksms.common.base.QkController
 import com.moez.qksms.common.util.Colors
 import com.moez.qksms.common.util.extensions.animateLayoutChanges
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
 import com.moez.qksms.common.widget.QkSwitch
 import com.moez.qksms.databinding.BlockingControllerBinding
 import com.moez.qksms.feature.blocking.manager.BlockingManagerController
@@ -62,6 +63,7 @@ class BlockingController : QkController<BlockingView, BlockingState, BlockingPre
 
     override fun onViewCreated() {
         super.onViewCreated()
+        binding.scrollView.applyNavBarBottomPadding()
         binding.parent.postDelayed({ binding.parent?.animateLayoutChanges = true }, 100)
     }
 

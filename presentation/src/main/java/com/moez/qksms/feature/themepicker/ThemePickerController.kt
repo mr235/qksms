@@ -28,6 +28,7 @@ import com.jakewharton.rxbinding3.view.clicks
 import com.moez.qksms.R
 import com.moez.qksms.common.base.QkController
 import com.moez.qksms.common.util.Colors
+import com.moez.qksms.common.util.extensions.applyNavBarBottomPadding
 import com.moez.qksms.common.util.extensions.dpToPx
 import com.moez.qksms.common.util.extensions.setBackgroundTint
 import com.moez.qksms.common.util.extensions.setVisible
@@ -68,6 +69,9 @@ class ThemePickerController(
     }
 
     override fun onViewCreated() {
+        binding.materialColors.applyNavBarBottomPadding()
+        binding.hsvPicker.root.applyNavBarBottomPadding(includeIme = true)
+
         binding.pager.offscreenPageLimit = 1
         binding.pager.adapter = themePagerAdapter
         binding.tabs.pager = binding.pager
